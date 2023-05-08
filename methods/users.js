@@ -27,7 +27,7 @@ export async function createUser(currentUserId, userName='User') {
     });
     
     if (request.ok) {
-        console.log(`The user(${userName}) was successfully created!`);
+        console.log(`The user(${userName}) was successfully created! UUID:${currentUserId}`);
     }else console.log(`Error: The user(${userName}) was not created. Code: ${request.status}`);
 }
 

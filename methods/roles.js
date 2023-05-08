@@ -25,7 +25,7 @@ export async function createRole(currentRoleId, roleName='Role') {
     });
     
     if (request.ok) {
-        console.log(`The role(${roleName}) was successfully created!`);
+        console.log(`The role(${roleName}) was successfully created! UUID:${currentRoleId}`);
     }else console.log(`Error: The role(${roleName}) was not created. Code: ${request.status}`);
 }
 
@@ -36,16 +36,15 @@ export async function setRolePermissions(currentRoleId) {
             "permissions": {
                 [currentRoleId]: {
                     "unrestricted_access": "UNRESTRICTED_ACCESS_NO",
-                    "maps_access": "MAP_ACCESS_FORBID",
-                    "alert_access": "ALERT_ACCESS_FORBID",
-                    "bookmark_access": "BOOKMARK_ACCESS_NO",
-                    "user_rights_setup_access": "USER_RIGHTS_SETUP_ACCESS_NO",
+                    "maps_access": "MAP_ACCESS_FULL",
+                    "alert_access": "ALERT_ACCESS_FULL",
+                    "bookmark_access": "BOOKMARK_ACCESS_CREATE_PROTECT_EDIT_DELETE",
+                    "user_rights_setup_access": "USER_RIGHTS_SETUP_ACCESS_ALL",
                     "default_camera_access": "CAMERA_ACCESS_FULL",
-                    "default_microphone_access": "MICROPHONE_ACCESS_FORBID",
-                    "default_telemetry_priority": "TELEMETRY_PRIORITY_NO_ACCESS",
-                    "default_archive_access": "ARCHIVE_ACCESS_FORBID",
-                    "default_acfa_access": "ACFA_ACCESS_FORBID",
-                    "default_videowall_access": "VIDEOWALL_ACCESS_FORBID",
+                    "default_microphone_access": "MICROPHONE_ACCESS_FULL",
+                    "default_telemetry_priority": "TELEMETRY_PRIORITY_HIGHEST",
+                    "default_archive_access": "ARCHIVE_ACCESS_FULL",
+                    "default_videowall_access": "VIDEOWALL_ACCESS_FULL",
                     "archive_view_restrictions": {
                         "depth_hours": "0"
                     },

@@ -4,32 +4,88 @@ import { createRole, setRolePermissions, } from '../methods/roles';
 import { createUser, setUserPassword, assingUserRole, } from '../methods/users';
 import { createArchive, createArchiveVolume, } from '../methods/archives';
 import { createCamera, } from '../methods/cameras';
-// import { createRole, setRolePermissions, createUser, setUserPassword, assingUserRole, createArchive, createArchiveVolume } from '../grpc_methods';
+import { beforeEach } from 'node:test';
+import { randomUUID } from 'node:crypto';
+// let roles = {
+//     root: {
+//       roleId: undefined,
+//       userId: undefined,
+//     },
+//     role: {
+//       roleId: randomUUID(),
+//       users: {
+//         user: {
+//           userId: randomUUID()
+//         }
+//       }
+//     }
+//   }
+let roleId = randomUUID();
+let userId = randomUUID();
+
+test.beforeAll(async () => {
+  await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
+
+  await createRole(roleId, 'Role');
+  await setRolePermissions(roleId);
+  await createUser(userId, "User");
+  await assingUserRole(roleId, userId);
+  console.log(userId, roleId);
+});
+
+test.afterAll(async () => {
+  //delete all objects
+});
+
+test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page }) => {
+  await page.goto(currentURL);
+  // await page.pause();
+  await page.getByLabel('Login').fill('');
+  await page.getByLabel('Password').fill('');
+  await expect(page.getByRole('button', { name: 'Log in' })).toBeDisabled();
+});
 
 
-test('test', async ({ page }) => {
-  let roleId = "60c60ed4-47e3-4d5e-9737-0f00b684f535";
-  let userId = "393b06f3-d419-441d-8834-b5d1824c135a";
-  // await createRole(roleId, 'extraRole');
-  // await setRolePermissions(roleId);
-  // await createUser(userId);
-  // await setUserPassword(userId, '1');
-  // await assingUserRole(roleId, userId);
-  // await createArchive();
-  // await createArchiveVolume();
-  await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
+test('Authorization attempt with an empty password (CLOUD-T154)', async ({ page }) => {
+  await page.goto(currentURL);
+  // await page.pause();
+  await page.getByLabel('Login').fill('root');
+  await page.getByRole('button', { name: 'Log in' }).click();
+  await expect(page.locator('id=password-helper-text')).toHaveText("Incorrect login or password");
+  await expect(page.getByLabel('Login')).toBeEmpty();
+});
+
+test('Authorization with an empty password (CLOUD-T633)', async ({ page }) => {
+  await setUserPassword(userId, '')
+  console.log(userId);
   await page.goto(currentURL);
   // await page.pause();
   await page.getByLabel('Login').fill('user');
-  await page.getByLabel('Password').fill('1');
-  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.getByLabel('Login').press('Enter');
   await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
   await expect(page.locator('id=at-app-mode-live')).toBeVisible();
-  
-  // await page.click("id=at-app-mode-search");
-  // await page.pause();
-  // await page.click("id=at-app-mode-live");
-  // await page.pause();
-  // await page.locator("text=hardware").click();
-  // await page.pause();
 });
+
+test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
+  await setUserPassword(userId, 'admin123');
+  console.log(userId);
+  await page.goto(currentURL);
+  // await page.pause();
+  await page.getByLabel('Login').fill('root');
+  await page.getByLabel('Password').fill('root');
+  await page.getByLabel('Login').press('Enter');
+  await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
+  await expect(page.locator('id=at-app-mode-live')).toBeVisible();
+  await page.locator('#at-top-menu-btn').click();
+  await expect(page.getByText('root', { exact: true })).toBeVisible(); 
+  await page.getByRole('menuitem', { name: 'Change user' }).click();
+  await page.getByLabel('Login').fill('user');
+  await page.getByLabel('Password').fill('admin123');
+  await page.getByLabel('Password').press('Enter');
+  await page.locator('#at-top-menu-btn').click();
+  await expect(page.getByText('User', { exact: true })).toBeVisible(); 
+});
+
+
+
+
