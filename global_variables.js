@@ -3,7 +3,7 @@
 // };
 
 export let currentURL = "http://192.168.0.24";
-export let videoFolder = 'C:';
+export let videoFolder = 'C:/demovideo';
 export let archiveDirection = 'C:/arch';
 export let createdUnits = {
     cameras: [],
@@ -11,6 +11,7 @@ export let createdUnits = {
     users: [],
     archives: []
 }
+
 // export let forbidAllPermissions = {
 //     "unrestricted_access": "UNRESTRICTED_ACCESS_NO",
 //     "maps_access": "MAP_ACCESS_FORBID",

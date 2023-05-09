@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { currentURL } from '../global_variables';
-import { createRole, setRolePermissions, } from '../grpc_api/roles';
-import { createUser, setUserPassword, assingUserRole, } from '../grpc_api/users';
+import { currentURL, createdUnits } from '../global_variables';
+import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
+import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
-import { createCamera, } from '../grpc_api/cameras';
-import { beforeEach } from 'node:test';
+import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo} from '../grpc_api/cameras';
 import { randomUUID } from 'node:crypto';
+let videoChannelList;
 let roleId = randomUUID();
 let userId = randomUUID();
+
 let userWithoutWEB = {
   "feature_access": [
       "FEATURE_ACCESS_DEVICES_SETUP",
@@ -40,23 +41,34 @@ let userWithoutWEB = {
 }
 
 test.beforeAll(async () => {
-  await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
+    await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80");
+    await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80");
+    console.log(createdUnits.cameras);
+    videoChannelList = await getVideChannelsList(createdUnits.cameras);
+    await addVirtualVideo(videoChannelList, "lprusa", "tracker");
 
-  await createRole(roleId, 'Role');
-  await setRolePermissions(roleId);
-  await createUser(userId, "User");
-  await assingUserRole(roleId, userId);
-  console.log(userId, roleId);
+    // await createRole(roleId, 'Role');
+    // await setRolePermissions(roleId);
+    // await createUser(userId, "User");
+    // await assingUserRole(roleId, userId);
+  });
+  
+test.afterAll(async () => {
+    console.log(createdUnits);
+    // await deleteRoles(createdUnits.roles);
+    // await deleteUsers(createdUnits.users);
+    // await deleteCameras(createdUnits.cameras);
 });
 
-test.afterAll(async () => {
-  //delete all objects
+test.beforeEach(async ({ page }) => {
+    await page.goto(currentURL);
+    await page.getByLabel('Login').fill('root');
+    await page.getByLabel('Password').fill('root');
+    await page.getByLabel('Password').press('Enter');
 });
 
 test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page }) => {
-  await page.goto(currentURL);
-  await page.pause();
-  await page.getByLabel('Login').fill('');
-  await page.getByLabel('Password').fill('');
-  await expect(page.getByRole('button', { name: 'Log in' })).toBeDisabled();
+    await page.pause();
+    await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
+    await expect(page.locator('id=at-app-mode-live')).toBeVisible();
 });

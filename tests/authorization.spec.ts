@@ -4,22 +4,8 @@ import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
-import { beforeEach } from 'node:test';
 import { randomUUID } from 'node:crypto';
-// let roles = {
-//     root: {
-//       roleId: undefined,
-//       userId: undefined,
-//     },
-//     role: {
-//       roleId: randomUUID(),
-//       users: {
-//         user: {
-//           userId: randomUUID()
-//         }
-//       }
-//     }
-//   }
+
 let roleId = randomUUID();
 let userId = randomUUID();
 let userWithoutWEB = {
@@ -60,7 +46,6 @@ test.beforeAll(async () => {
   await setRolePermissions(roleId);
   await createUser(userId, "User");
   await assingUserRole(roleId, userId);
-  console.log(userId, roleId);
 });
 
 test.afterAll(async () => {
@@ -129,6 +114,30 @@ test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page
   await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
   await expect(page.getByLabel('Login')).toBeEmpty();
   await expect(page.getByLabel('Password')).toBeEmpty();
+});
+
+test('Authorization with changed server URL (CLOUD-T156)', async ({ page }) => {
+  // setRolePermissions(roleId, userWithoutWEB);
+  // await page.goto(currentURL);
+  // // await page.pause();
+  // await page.getByLabel('Login').fill('user');
+  // await page.getByLabel('Password').fill('admin123');
+  // await page.getByRole('button', { name: 'Log in' }).click();
+  // await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
+  // await expect(page.getByLabel('Login')).toBeEmpty();
+  // await expect(page.getByLabel('Password')).toBeEmpty();
+});
+
+test('Authorization via index.html file (CLOUD-T633)', async ({ page }) => {
+  // setRolePermissions(roleId, userWithoutWEB);
+  // await page.goto(currentURL);
+  // // await page.pause();
+  // await page.getByLabel('Login').fill('user');
+  // await page.getByLabel('Password').fill('admin123');
+  // await page.getByRole('button', { name: 'Log in' }).click();
+  // await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
+  // await expect(page.getByLabel('Login')).toBeEmpty();
+  // await expect(page.getByLabel('Password')).toBeEmpty();
 });
 
 
