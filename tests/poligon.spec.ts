@@ -33,3 +33,17 @@ test('test', async ({ page }) => {
   // await page.locator("text=hardware").click();
   // await page.pause();
 });
+
+
+test.only('Filter by imported file', async ({ page }) => {
+  await page.goto(currentURL);
+  await page.pause();
+  await page.getByLabel('Login').fill('root');
+  await page.getByLabel('Password').fill('root');
+  await page.getByLabel('Login').press('Enter');
+  await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
+  await page.locator('#import-search-camlist-btn').setInputFiles('./test_data/example.xlsx');
+  await expect(page.getByRole('button', { name: '108.Camera' })).toBeHidden();
+  await expect(page.getByRole('button', { name: '109.Camera' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '110.Camera' })).toBeHidden();
+});

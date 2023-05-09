@@ -1,4 +1,4 @@
-import {currentURL} from '../global_variables';
+import {currentURL, createdUnits} from '../global_variables';
 
 export async function createUser(currentUserId, userName='User') {
     let body = {
@@ -27,6 +27,7 @@ export async function createUser(currentUserId, userName='User') {
     });
     
     if (request.ok) {
+        createdUnits.users.push(currentUserId);
         console.log(`The user(${userName}) was successfully created! UUID:${currentUserId}`);
     }else console.log(`Error: The user(${userName}) was not created. Code: ${request.status}`);
 }
@@ -85,4 +86,25 @@ export async function assingUserRole(currentRoleId, currentUserId) {
     
 }
 
+export async function deleteUsers(usersID) {
+
+    let body =     {
+            "method": "axxonsoft.bl.security.SecurityService.ChangeConfig",
+            "data": {
+                "removed_users": usersID
+            }
+        };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    if (request.ok) {
+        console.log(`User was successfully deleted!`);
+    }else console.log(`Error: could not delete user. Code: ${request.status}`);
+};
 
