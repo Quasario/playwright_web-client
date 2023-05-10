@@ -104,6 +104,7 @@ export async function deleteUsers(usersID) {
     });
     
     if (request.ok) {
+        createdUnits.users = createdUnits.users.filter(i => !usersID.includes(i)); //clear array from deleted items
         console.log(`User was successfully deleted!`);
     }else console.log(`Error: could not delete user. Code: ${request.status}`);
 };

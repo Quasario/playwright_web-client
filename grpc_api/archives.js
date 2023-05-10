@@ -139,6 +139,7 @@ export async function deleteArchive(archiveReference) {
     });
 
     if (request.ok && !response.failed.length) {
+        createdUnits.archives = []; //clear array from deleted items
         console.log(`Archive (${archiveReference}) was successfully deleted!`);
     }else console.log(`Error: Archive (${archiveReference}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`);
 };

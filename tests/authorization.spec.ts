@@ -105,7 +105,7 @@ test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
 });
 
 test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page }) => {
-  setRolePermissions(roleId, userWithoutWEB);
+  await setRolePermissions(roleId, userWithoutWEB);
   await page.goto(currentURL);
   // await page.pause();
   await page.getByLabel('Login').fill('user');

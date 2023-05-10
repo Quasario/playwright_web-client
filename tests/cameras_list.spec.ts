@@ -3,7 +3,7 @@ import { currentURL, createdUnits } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
-import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo} from '../grpc_api/cameras';
+import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo, changeSingleCameraActiveStatus, changeIPServerCameraActiveStatus} from '../grpc_api/cameras';
 import { randomUUID } from 'node:crypto';
 let videoChannelList;
 let roleId = randomUUID();
@@ -46,6 +46,9 @@ test.beforeAll(async () => {
     console.log(createdUnits.cameras);
     videoChannelList = await getVideChannelsList(createdUnits.cameras);
     await addVirtualVideo(videoChannelList, "lprusa", "tracker");
+    await changeSingleCameraActiveStatus(videoChannelList[2].cameraBinding, false);
+    await changeIPServerCameraActiveStatus(videoChannelList[5].uid, false);
+    await changeIPServerCameraActiveStatus(videoChannelList[6].uid, false);
 
     // await createRole(roleId, 'Role');
     // await setRolePermissions(roleId);
@@ -68,7 +71,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page }) => {
-    await page.pause();
+    // await page.pause();
     await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
     await expect(page.locator('id=at-app-mode-live')).toBeVisible();
 });

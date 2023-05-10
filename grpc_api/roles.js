@@ -72,6 +72,7 @@ export async function deleteRoles(rolesID) {
     });
     
     if (request.ok) {
+        createdUnits.roles = createdUnits.roles.filter(i => !rolesID.includes(i)); //clear array from deleted items
         console.log(`Role was successfully deleted!`);
     }else console.log(`Error: could not delete role. Code: ${request.status}`);
 };
