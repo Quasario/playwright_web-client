@@ -1,10 +1,12 @@
-import { test, expect } from '@playwright/test';
-import { currentURL, createdUnits } from '../global_variables';
+import { test, expect, } from '@playwright/test';
+import { currentURL, createdUnits, hostName } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
+import { setServerConfig } from '../grpc_api/server';
 import { randomUUID } from 'node:crypto';
+import { getHostName } from '../http_api/http_host';
 
 let roleId = randomUUID();
 let userId = randomUUID();
@@ -40,6 +42,7 @@ let userWithoutWEB = {
 }
 
 test.beforeAll(async () => {
+  await getHostName();
   await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
 
   await createRole(roleId, 'Role');
@@ -104,6 +107,28 @@ test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
   await expect(page.getByText('User', { exact: true })).toBeVisible(); 
 });
 
+test('Authorization with changed server URL (CLOUD-T156)', async ({ page }) => {
+  let port = "874";
+  let prefix = "/web/ui";
+  await setServerConfig(port, prefix);
+  await page.goto(`${currentURL}:${port}${prefix}`);
+  // await page.pause();
+  await page.getByLabel('Login').fill('root');
+  await page.getByLabel('Password').fill('root');
+  await page.getByLabel('Password').press('Enter');
+  await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
+  await expect(page.locator('id=at-app-mode-live')).toBeVisible();
+  await page.locator('#at-top-menu-btn').click();
+  await expect(page.getByText('root', { exact: true })).toBeVisible(); 
+  await page.getByRole('menuitem', { name: 'Change user' }).click();
+  await page.getByLabel('Login').fill('user');
+  await page.getByLabel('Password').fill('admin123');
+  await page.getByLabel('Password').press('Enter');
+  await page.locator('#at-top-menu-btn').click();
+  await expect(page.getByText('User', { exact: true })).toBeVisible();
+  await setServerConfig("80", "/");
+});
+
 test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page }) => {
   await setRolePermissions(roleId, userWithoutWEB);
   await page.goto(currentURL);
@@ -116,29 +141,18 @@ test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page
   await expect(page.getByLabel('Password')).toBeEmpty();
 });
 
-test('Authorization with changed server URL (CLOUD-T156)', async ({ page }) => {
-  // setRolePermissions(roleId, userWithoutWEB);
-  // await page.goto(currentURL);
-  // // await page.pause();
-  // await page.getByLabel('Login').fill('user');
-  // await page.getByLabel('Password').fill('admin123');
-  // await page.getByRole('button', { name: 'Log in' }).click();
-  // await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
-  // await expect(page.getByLabel('Login')).toBeEmpty();
-  // await expect(page.getByLabel('Password')).toBeEmpty();
-});
 
-test('Authorization via index.html file (CLOUD-T633)', async ({ page }) => {
-  // setRolePermissions(roleId, userWithoutWEB);
-  // await page.goto(currentURL);
-  // // await page.pause();
-  // await page.getByLabel('Login').fill('user');
-  // await page.getByLabel('Password').fill('admin123');
-  // await page.getByRole('button', { name: 'Log in' }).click();
-  // await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
-  // await expect(page.getByLabel('Login')).toBeEmpty();
-  // await expect(page.getByLabel('Password')).toBeEmpty();
-});
+// test('Authorization via index.html file (CLOUD-T633)', async ({ page }) => {
+//   setRolePermissions(roleId, userWithoutWEB);
+//   await page.goto(currentURL);
+//   // await page.pause();
+//   await page.getByLabel('Login').fill('user');
+//   await page.getByLabel('Password').fill('admin123');
+//   await page.getByRole('button', { name: 'Log in' }).click();
+//   await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
+//   await expect(page.getByLabel('Login')).toBeEmpty();
+//   await expect(page.getByLabel('Password')).toBeEmpty();
+// });
 
 
 

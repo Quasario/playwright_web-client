@@ -1,19 +1,19 @@
-import {currentURL, createdUnits, videoFolder} from '../global_variables';
+import {currentURL, createdUnits, videoFolder, hostName} from '../global_variables';
 
-export async function getHostName() {
-    let request = await fetch(`${currentURL}/hosts`, {
-        headers: {
-            "Authorization": "Basic cm9vdDpyb290",
-        }
-    });
+// export async function getHostName() {
+//     let request = await fetch(`${currentURL}/hosts`, {
+//         headers: {
+//             "Authorization": "Basic cm9vdDpyb290",
+//         }
+//     });
 
-    let hosts = await request.json();
-    return hosts[0];
-}
+//     let hosts = await request.json();
+//     return hosts[0];
+// };
 
 
 export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80") {
-    let hostName = await getHostName();
+    // let hostName = await getHostName();
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
@@ -211,7 +211,7 @@ export async function changeIPServerCameraActiveStatus(videoChannelsEndpoint, bo
 
 export async function addVirtualVideo(videoChannelsEndpoints, highStreamVideo, lowStreamVideo) {
     for(let videoChannelEndpoint of videoChannelsEndpoints) {
-        console.log(videoChannelEndpoint);
+        console.log(videoChannelEndpoint.uid);
         let body = {
             "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
             "data": {
@@ -281,7 +281,7 @@ export async function getUnitsList(endpoints) {
         let response = await request.json();
         // console.log(response);
         return response;
-    } else console.log(`Error: Pull cameras information failed. Code: ${request.status}`);
+    } else console.log(`Error: Pull units information failed. Code: ${request.status}`);
 };
 
 
@@ -292,7 +292,7 @@ export async function getVideChannelsList(camerasEndpoint) {
         let unit = await getUnitsList([cam]);
         camerasProps.push(unit.units[0]);
     };
-    console.log(camerasProps);
+    // console.log(camerasProps);
     
     for (let camera of camerasProps) {
         for (let channel of camera.units) {

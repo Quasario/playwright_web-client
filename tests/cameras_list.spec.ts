@@ -41,14 +41,16 @@ let userWithoutWEB = {
 }
 
 test.beforeAll(async () => {
-    await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80");
-    await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80");
-    console.log(createdUnits.cameras);
-    videoChannelList = await getVideChannelsList(createdUnits.cameras);
-    await addVirtualVideo(videoChannelList, "lprusa", "tracker");
-    await changeSingleCameraActiveStatus(videoChannelList[2].cameraBinding, false);
-    await changeIPServerCameraActiveStatus(videoChannelList[5].uid, false);
-    await changeIPServerCameraActiveStatus(videoChannelList[6].uid, false);
+    // await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80");
+    // await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80");
+    // console.log(createdUnits.cameras);
+    // videoChannelList = await getVideChannelsList(createdUnits.cameras);
+    // await addVirtualVideo(videoChannelList, "lprusa", "tracker");
+    // await changeSingleCameraActiveStatus(videoChannelList[2].cameraBinding, false);
+    // await changeIPServerCameraActiveStatus(videoChannelList[5].uid, false);
+    // await changeIPServerCameraActiveStatus(videoChannelList[6].uid, false);
+
+
 
     // await createRole(roleId, 'Role');
     // await setRolePermissions(roleId);
@@ -68,6 +70,11 @@ test.beforeEach(async ({ page }) => {
     await page.getByLabel('Login').fill('root');
     await page.getByLabel('Password').fill('root');
     await page.getByLabel('Password').press('Enter');
+    // await page.pause();
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Show only live cameras').uncheck();
+    await page.locator(".MuiDialogActions-spacing button:nth-child(2)").click();
 });
 
 test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page }) => {

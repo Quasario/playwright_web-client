@@ -1,4 +1,4 @@
-import {currentURL} from '../global_variables';
+import {currentURL, setGlobalHostName} from '../global_variables';
 
 export async function getHostName() {
     let request = await fetch(`${currentURL}/hosts`, {
@@ -8,5 +8,6 @@ export async function getHostName() {
     });
 
     let hosts = await request.json();
+    setGlobalHostName(hosts);
     return hosts[0];
 }

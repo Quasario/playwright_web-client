@@ -1,7 +1,7 @@
 import { getHostName } from "./http_api/http_host";
 
 export let currentURL = "http://192.168.0.24";
-// export let hostName = getHostName();
+export let hostName;
 export let videoFolder = 'C:/demovideo';
 export let archiveDirection = 'C:/arch';
 export let createdUnits = {
@@ -9,6 +9,11 @@ export let createdUnits = {
     roles: [],
     users: [],
     archives: []
+}
+
+export function setGlobalHostName(hosts) {
+    hostName = hosts[0];
+    console.log("host = " + hostName);
 }
 
 // export let forbidAllPermissions = {

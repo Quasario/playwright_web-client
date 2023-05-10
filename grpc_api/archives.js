@@ -1,18 +1,17 @@
-import {currentURL, archiveDirection, createdUnits} from '../global_variables';
+import {currentURL, archiveDirection, createdUnits, hostName} from '../global_variables';
 
-export async function getHostName() {
-    let request = await fetch(`${currentURL}/hosts`, {
-        headers: {
-            "Authorization": "Basic cm9vdDpyb290",
-        }
-    });
+// export async function getHostName() {
+//     let request = await fetch(`${currentURL}/hosts`, {
+//         headers: {
+//             "Authorization": "Basic cm9vdDpyb290",
+//         }
+//     });
 
-    let hosts = await request.json();
-    return hosts[0];
-}
+//     let hosts = await request.json();
+//     return hosts[0];
+// }
 
 export async function createArchive(archiveName='White') {
-    let hostName = await getHostName();
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
@@ -61,7 +60,6 @@ export async function createArchive(archiveName='White') {
 }
 
 export async function createArchiveVolume(archiveName='White', fileSize=10) {
-    let hostName = await getHostName();
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
