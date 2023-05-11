@@ -1,4 +1,5 @@
 import {currentURL, createdUnits, alloyAllPermisions} from '../global_variables';
+import { green, blue, yellow, red } from 'colors';
 
 export async function createRole(currentRoleId, roleName='Role') {
     let body = {
@@ -26,8 +27,8 @@ export async function createRole(currentRoleId, roleName='Role') {
     
     if (request.ok) {
         createdUnits.roles.push(currentRoleId);
-        console.log(`The role(${roleName}) was successfully created! UUID:${currentRoleId}`);
-    }else console.log(`Error: The role(${roleName}) was not created. Code: ${request.status}`);
+        console.log(`The role (${roleName}) was successfully created! UUID: ${currentRoleId}`.green);
+    } else console.log(`Error: The role (${roleName}) was not created. Code: ${request.status}`.red);
 }
 
 export async function setRolePermissions(currentRoleId, permissions) {
@@ -50,8 +51,8 @@ export async function setRolePermissions(currentRoleId, permissions) {
     });
     
     if (request.ok) {
-        console.log(`Permissions was successfully changed!`);
-    }else console.log(`Error: could not set permissions. Code: ${request.status}`);
+        console.log(`Permissions for role (${currentRoleId}) was successfully changed!`.green);
+    } else console.log(`Error: could not set permissions for role (${currentRoleId}). Code: ${request.status}`.red);
 }
 
 export async function deleteRoles(rolesID) {
@@ -73,7 +74,7 @@ export async function deleteRoles(rolesID) {
     
     if (request.ok) {
         createdUnits.roles = createdUnits.roles.filter(i => !rolesID.includes(i)); //clear array from deleted items
-        console.log(`Role was successfully deleted!`);
-    }else console.log(`Error: could not delete role. Code: ${request.status}`);
+        console.log(`Roles was successfully deleted!`.green);
+    } else console.log(`Error: could not delete roles. Code: ${request.status}`.red);
 };
 

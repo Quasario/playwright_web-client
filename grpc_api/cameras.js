@@ -1,4 +1,5 @@
 import {currentURL, createdUnits, videoFolder, hostName} from '../global_variables';
+import { green, blue, yellow, red } from 'colors';
 
 // export async function getHostName() {
 //     let request = await fetch(`${currentURL}/hosts`, {
@@ -98,8 +99,8 @@ export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual s
 
         if (request.ok && !response.failed.length) {
             createdUnits.cameras.push(response.added[0]);
-            console.log(`Camera (${vendor}/${model}) №${i} was successfully created!`);
-        } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`);
+            console.log(`Camera (${vendor}/${model}) №${i} was successfully created!`.green);
+        } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`.green);
     }
 
     
@@ -129,9 +130,9 @@ export async function deleteCameras(camerasEndpoints) {
     
     if (request.ok) {
         createdUnits.cameras = createdUnits.cameras.filter(i => !camerasEndpoints.includes(i)); //clear array from deleted items
-        console.log(`Cameras ${camerasEndpoints.toString()} was successfully deleted!`);
+        console.log(`Cameras ${camerasEndpoints.toString()} was successfully deleted!`.green);
         console.log(createdUnits);
-    } else console.log(`Error: could not delete cameras ${camerasEndpoints.toString()}. Code: ${request.status}`);
+    } else console.log(`Error: could not delete cameras ${camerasEndpoints.toString()}. Code: ${request.status}`.red);
 };
 
 
@@ -167,8 +168,8 @@ export async function changeSingleCameraActiveStatus(camerasEndpoint, bool=false
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${camerasEndpoint}) was ${bool ? "enabled" : "disabled"}.`);
-    } else console.log(`Error: Camera (${camerasEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`);
+        console.log(`Camera (${camerasEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera (${camerasEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
 
@@ -204,8 +205,8 @@ export async function changeIPServerCameraActiveStatus(videoChannelsEndpoint, bo
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${videoChannelsEndpoint}) was ${bool ? "enabled" : "disabled"}.`);
-    } else console.log(`Error: Camera (${videoChannelsEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`);
+        console.log(`Camera (${videoChannelsEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera (${videoChannelsEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
 
@@ -253,8 +254,8 @@ export async function addVirtualVideo(videoChannelsEndpoints, highStreamVideo, l
         let response = await request.json();
         
         if (request.ok && !response.failed.length) {
-            console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${videoChannelEndpoint}).`);
-        } else console.log(`Error: Coudn't add video to camera ${videoChannelEndpoint}. Code: ${request.status}, Failed: ${response.failed}`);
+            console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${videoChannelEndpoint}).`.green);
+        } else console.log(`Error: Coudn't add video to camera ${videoChannelEndpoint}. Code: ${request.status}, Failed: ${response.failed}`.red);
     }
 };
 
@@ -277,11 +278,11 @@ export async function getUnitsList(endpoints) {
     });
     
     if (request.ok) {
-        console.log(`Unit list for ${endpoints.toString()} were provided.`);
+        console.log(`Unit list for ${endpoints.toString()} were provided.`.green);
         let response = await request.json();
         // console.log(response);
         return response;
-    } else console.log(`Error: Pull units information failed. Code: ${request.status}`);
+    } else console.log(`Error: Pull units information failed. Code: ${request.status}`.red);
 };
 
 

@@ -7,6 +7,7 @@ import { createCamera, deleteCameras} from '../grpc_api/cameras';
 import { exchangeIndexCredentials } from '../node/fs.mjs';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
+import { yellow, } from 'colors';
 
 
 let roleId = randomUUID();
@@ -79,7 +80,6 @@ test('Authorization attempt with an empty password (CLOUD-T154)', async ({ page 
 
 test('Authorization with an empty password (CLOUD-T633)', async ({ page }) => {
     await setUserPassword(userId, '')
-    console.log(userId);
     await page.goto(currentURL);
     // await page.pause();
     await page.getByLabel('Login').fill('user');
@@ -90,7 +90,6 @@ test('Authorization with an empty password (CLOUD-T633)', async ({ page }) => {
 
 test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
     await setUserPassword(userId, 'admin123');
-    console.log(userId);
     await page.goto(currentURL);
     // await page.pause();
     await page.getByLabel('Login').fill('root');
@@ -126,7 +125,7 @@ test('Authorization via index.html file (CLOUD-T633)', async ({ page }) => {
         await page.locator('#at-top-menu-btn').click();
         await expect(page.getByText('root', { exact: true })).toBeVisible(); 
     } else {
-        console.log("Can't resolve test CLOUD-T633, it can be execute only if server stands on local machine");
+        console.log(yellow("Can't resolve test CLOUD-T633, it can be execute only if server stands on local machine"));
         test.skip();
     }
 });

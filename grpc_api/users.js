@@ -1,4 +1,5 @@
 import {currentURL, createdUnits} from '../global_variables';
+import { green, blue, yellow, red } from 'colors';
 
 export async function createUser(currentUserId, userName='User') {
     let body = {
@@ -28,8 +29,8 @@ export async function createUser(currentUserId, userName='User') {
     
     if (request.ok) {
         createdUnits.users.push(currentUserId);
-        console.log(`The user(${userName}) was successfully created! UUID:${currentUserId}`);
-    }else console.log(`Error: The user(${userName}) was not created. Code: ${request.status}`);
+        console.log(`The user (${userName}) was successfully created! UUID: ${currentUserId}`.green);
+    } else console.log(`Error: The user(${userName}) was not created. Code: ${request.status}`.red);
 }
 
 export async function setUserPassword(currentUserId, password="123") {
@@ -54,8 +55,8 @@ export async function setUserPassword(currentUserId, password="123") {
     });
 
     if (request.ok) {
-        console.log(`Password was successfully set!`);
-    }else console.log(`Error: could not set user password. Code: ${request.status}`);
+        console.log(`Password for user (${currentUserId}) was successfully set!`.green);
+    } else console.log(`Error: could not set user password (${currentUserId}). Code: ${request.status}`.red);
     
 }
 
@@ -81,8 +82,8 @@ export async function assingUserRole(currentRoleId, currentUserId) {
     });
 
     if (request.ok) {
-        console.log(`The role was successfully assigned to user!`);
-    }else console.log(`Error: The role was not assined to user. Code: ${request.status}`);
+        console.log(`The role (${currentRoleId}) was successfully assigned to user (${currentUserId})!`.green);
+    } else console.log(`Error: The role (${currentRoleId}) was not assined to user (${currentUserId}). Code: ${request.status}`.red);
     
 }
 
@@ -105,7 +106,7 @@ export async function deleteUsers(usersID) {
     
     if (request.ok) {
         createdUnits.users = createdUnits.users.filter(i => !usersID.includes(i)); //clear array from deleted items
-        console.log(`User was successfully deleted!`);
-    }else console.log(`Error: could not delete user. Code: ${request.status}`);
+        console.log(`Users was successfully deleted!`.green);
+    } else console.log(`Error: could not delete users. Code: ${request.status}`.red);
 };
 

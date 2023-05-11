@@ -1,4 +1,5 @@
 import {currentURL, archiveDirection, createdUnits, hostName} from '../global_variables';
+import { green, blue, yellow, red } from 'colors';
 
 // export async function getHostName() {
 //     let request = await fetch(`${currentURL}/hosts`, {
@@ -54,8 +55,8 @@ export async function createArchive(archiveName='White') {
 
     if (request.ok && !response.failed.length) {
         createdUnits.archives.push(response.added[0]);
-        console.log(`Archive(${archiveName}) was successfully created!`);
-    }else console.log(`Error: Archive was not created. Code: ${request.status}, Failed: ${response.failed}`);
+        console.log(`Archive(${archiveName}) was successfully created!`.green);
+    }else console.log(`Error: Archive was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     
 }
 
@@ -107,8 +108,8 @@ export async function createArchiveVolume(archiveName='White', fileSize=10) {
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Archive volume with size: ${fileSize} was successfully created in direction ${archiveDirection}!`);
-    }else console.log(`Error: Archive volume was not created. Code: ${request.status}, Failed: ${response.failed}`);
+        console.log(`Archive volume with size: ${fileSize} was successfully created in direction ${archiveDirection}!`.green);
+    }else console.log(`Error: Archive volume was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     
 };
 
@@ -138,8 +139,8 @@ export async function deleteArchive(archiveReference) {
 
     if (request.ok && !response.failed.length) {
         createdUnits.archives = []; //clear array from deleted items
-        console.log(`Archive (${archiveReference}) was successfully deleted!`);
-    }else console.log(`Error: Archive (${archiveReference}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`);
+        console.log(`Archive (${archiveReference}) was successfully deleted!`.green);
+    }else console.log(`Error: Archive (${archiveReference}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
 

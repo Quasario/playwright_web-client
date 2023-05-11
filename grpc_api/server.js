@@ -1,4 +1,6 @@
 import { currentURL, hostName } from '../global_variables';
+import { green, blue, yellow, red } from 'colors';
+
 // import { getHostName } from "../http_api/http_host";
 export let currentPort = "80";
 export let currentPrefix = "";
@@ -35,8 +37,8 @@ export async function getServerConfig(port, prefix) {
     });
 
     if (request.ok) {
-        console.log(`Server information has been provided.`);
-    } else console.log(`Error: Server information hasn't been provided.`);
+        console.log(`Server information has been provided.`.green);
+    } else console.log(`Error: Server information hasn't been provided.`.red);
 };
 
 
@@ -75,7 +77,7 @@ export async function setServerConfig(port, prefix) {
     currentPrefix = prefix;
     currentPort = port;
     console.log(currentPort, currentPrefix);
-    console.log(`Attempt server configuration change`);
+    console.log(`Attempt server configuration change`.yellow);
 
     // if (request.ok) {
     //     console.log(`Server configuration has changed`);

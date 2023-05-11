@@ -1,4 +1,5 @@
 import { getHostName } from "./http_api/http_host";
+import { green, blue, yellow, red } from 'colors'
 
 export let currentURL = "http://127.0.0.1";
 export let isLocalMachine = true; //если тесты и сервер находятся на одной машине - true
@@ -14,7 +15,7 @@ export let createdUnits = {
 
 export function setGlobalHostName(hosts) {
     hostName = hosts[0];
-    console.log("host = " + hostName);
+    console.log(blue("host = " + hostName));
 }
 
 // export let forbidAllPermissions = {
