@@ -1,7 +1,7 @@
 import { getHostName } from "./http_api/http_host";
 
-export let currentURL = "http://192.168.0.24";
-export let isLocalMachine = false; //если тесты и сервер находятся на одной машине - true
+export let currentURL = "http://127.0.0.1";
+export let isLocalMachine = true; //если тесты и сервер находятся на одной машине - true
 export let hostName;
 export let videoFolder = 'C:/demovideo';
 export let archiveDirection = 'C:/arch';

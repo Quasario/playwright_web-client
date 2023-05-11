@@ -8,4 +8,4 @@ export function exchangeIndexCredentials(username, password) {
     console.log("index.html was changed");
 }
 
-// exchangeIndexCredentials("user", "43540353");
+// exchangeIndexCredentials("", "");

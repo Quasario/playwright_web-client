@@ -135,7 +135,7 @@ export async function deleteCameras(camerasEndpoints) {
 };
 
 
-export async function changeSingleCameraActiveStatus(camerasEndpoint, bool) {
+export async function changeSingleCameraActiveStatus(camerasEndpoint, bool=false) {
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
