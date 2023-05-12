@@ -10,3 +10,9 @@ export function exchangeIndexCredentials(username, password) {
 }
 
 // exchangeIndexCredentials("", "");
+
+
+
+let webSoket = await page.waitForEvent('websocket');
+// let webSoket_2 = await page.waitForEvent('websocket');
+console.log(webSoket.url());

@@ -13,7 +13,7 @@ import { green, blue, yellow, red } from 'colors';
 // };
 
 
-export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80") {
+export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80", displayID="", displayName="") {
     // let hostName = await getHostName();
 
     let body = {
@@ -59,12 +59,12 @@ export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual s
                                 },
                                 {
                                     "id": "display_name",
-                                    "value_string": "",
+                                    "value_string": `${displayName}`,
                                     "properties": []
                                 },
                                 {
                                     "id": "display_id",
-                                    "value_string": "",
+                                    "value_string": `${displayID}`,
                                     "properties": []
                                 },
                                 {
@@ -100,7 +100,7 @@ export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual s
         if (request.ok && !response.failed.length) {
             createdUnits.cameras.push(response.added[0]);
             console.log(`Camera (${vendor}/${model}) №${i} was successfully created!`.green);
-        } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`.green);
+        } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     }
 
     
@@ -136,14 +136,14 @@ export async function deleteCameras(camerasEndpoints) {
 };
 
 
-export async function changeSingleCameraActiveStatus(camerasEndpoint, bool=false) {
+export async function changeSingleCameraActiveStatus(cameraEndpoint, bool=false) {
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
         "data": {
             "changed": [
                 {
-                    "uid": camerasEndpoint,
+                    "uid": cameraEndpoint,
                     "type": "DeviceIpint",
                     "properties": [
                         {
@@ -168,19 +168,93 @@ export async function changeSingleCameraActiveStatus(camerasEndpoint, bool=false
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${camerasEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
-    } else console.log(`Error: Camera (${camerasEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera (${cameraEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera (${cameraEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
 
-export async function changeIPServerCameraActiveStatus(videoChannelsEndpoint, bool) {
+export async function changeSingleCameraID(cameraEndpoint, newID) {
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
         "data": {
             "changed": [
                 {
-                    "uid": videoChannelsEndpoint,
+                    "uid": cameraEndpoint,
+                    "type": "DeviceIpint",
+                    "properties": [
+                        {
+                            "id": "display_id",
+                            "value_string": newID
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Camera (${cameraEndpoint}) friendly ID was changed to "${newID}".`.green);
+    } else console.log(`Error: Camera (${cameraEndpoint}) friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+};
+
+
+export async function changeSingleCameraName(cameraEndpoint, newName) {
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": [
+                {
+                    "uid": cameraEndpoint,
+                    "type": "DeviceIpint",
+                    "properties": [
+                        {
+                            "id": "display_name",
+                            "value_string": newName
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Camera (${cameraEndpoint}) name was changed to "${newName}".`.green);
+    } else console.log(`Error: Camera (${cameraEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+};
+
+
+export async function changeIPServerCameraActiveStatus(videoChannelEndpoint, bool) {
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": [
+                {
+                    "uid": videoChannelEndpoint,
                     "type": "VideoChannel",
                     "properties": [
                         {
@@ -205,10 +279,83 @@ export async function changeIPServerCameraActiveStatus(videoChannelsEndpoint, bo
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${videoChannelsEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
-    } else console.log(`Error: Camera (${videoChannelsEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera (${videoChannelEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera (${videoChannelEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
+
+export async function changeIPServerCameraID(videoChannelEndpoint, newID) {
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": [
+                {
+                    "uid": videoChannelEndpoint,
+                    "type": "VideoChannel",
+                    "properties": [
+                        {
+                            "id": "display_id",
+                            "value_string": newID
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Camera (${videoChannelEndpoint}) friendly ID was changed to "${newID}".`.green);
+    } else console.log(`Error: Camera (${videoChannelEndpoint}) friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+};
+
+
+export async function changeIPServerCameraName(videoChannelEndpoint, newName) {
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": [
+                {
+                    "uid": videoChannelEndpoint,
+                    "type": "VideoChannel",
+                    "properties": [
+                        {
+                            "id": "display_name",
+                            "value_string": newName
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Camera (${videoChannelEndpoint}) name was changed to "${newName}".`.green);
+    } else console.log(`Error: Camera (${videoChannelEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+};
 
 export async function addVirtualVideo(videoChannelsEndpoints, highStreamVideo, lowStreamVideo) {
     for(let videoChannelEndpoint of videoChannelsEndpoints) {
@@ -254,7 +401,7 @@ export async function addVirtualVideo(videoChannelsEndpoints, highStreamVideo, l
         let response = await request.json();
         
         if (request.ok && !response.failed.length) {
-            console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${videoChannelEndpoint}).`.green);
+            console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${videoChannelEndpoint.uid}).`.green);
         } else console.log(`Error: Coudn't add video to camera ${videoChannelEndpoint}. Code: ${request.status}, Failed: ${response.failed}`.red);
     }
 };

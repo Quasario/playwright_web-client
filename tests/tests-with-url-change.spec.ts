@@ -4,7 +4,7 @@ import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
-import { exchangeIndexCredentials } from '../node/fs.mjs';
+import { exchangeIndexCredentials } from '../utils/fs.mjs';
 import { setServerConfig } from '../grpc_api/server';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
