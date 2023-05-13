@@ -1,4 +1,4 @@
-import { test, expect, } from '@playwright/test';
+import { test, expect, WebSocket} from '@playwright/test';
 import { currentURL, createdUnits, hostName } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
@@ -7,8 +7,10 @@ import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo, chan
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-let websockets = {events: {},
-video: {},}; 
+let websockets = {
+    events: {},
+    video: {}
+}; 
 
 let videoChannelList;
 let roleId = randomUUID();
@@ -87,7 +89,11 @@ test.beforeEach(async ({ page }) => {
         // console.log(ws);
         
         // ws.on('framesent', event => console.log(event.payload));
-        // ws.on('framereceived', event => console.log(event.payload));
+        // ws.on('framereceived', event => {
+        //     if (typeof(event.payload) == typeof('') && event.payload.includes("hosts/DESKTOP-0OFNEM9/DeviceIpint.1/SourceEndpoint.video:0:0")) {
+        //         console.log(event.payload);
+        //     } 
+        // });
         // ws.on('close', () => console.log('WebSocket closed'));
     });
     await page.getByLabel('Login').fill('root');
@@ -164,18 +170,25 @@ test('Change width camera list (CLOUD-T122)', async ({ page }) => {
 
 test.only('Reltime list update (CLOUD-T123)', async ({ page }) => {
     // await createLayout(videoChannelList, 2, 2, "Test Layout");
-    // await page.pause();
+    await page.pause();
     
-    // page.on('request', request => console.log('>>', request.method(), request.url()));
+    // 
     await page.getByRole('button', { name: 'Hardware' }).click();
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "10", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "11", "Camera");
     await expect(page.getByRole('button', { name: '10.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '11.Camera', exact: true })).toBeVisible();
+    let promice = websockets.events.waitForEvent('framereceived', event => {
+        if (typeof(event.payload) == typeof('') && event.payload.includes("hosts/DESKTOP-0OFNEM9/DeviceIpint.11/SourceEndpoint.video:0:0") && event.payload.includes("cameralistupdate")) {
+            console.log(event.payload);
+            return true;
+        } 
+    });
     await deleteCameras([createdUnits.cameras[createdUnits.cameras.length - 2], createdUnits.cameras[createdUnits.cameras.length - 1]]);
-    console.log(websockets.events.url());
-    console.log(websockets.video.url());
-    await page.waitForTimeout(5000);  // лучше переписать
+    await promice;
+    // console.log(websockets.events.url());
+    // console.log(websockets.video.url());
+    // await page.waitForTimeout(5000);  // лучше переписать
     expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
     expect(await page.getByRole('button', { name: '11.Camera', exact: true }).count()).toEqual(0);
 });
