@@ -7,7 +7,8 @@ import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo, chan
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import WebSocket from 'ws';
+let websockets = {events: {},
+video: {},}; 
 
 let videoChannelList;
 let roleId = randomUUID();
@@ -73,6 +74,22 @@ test.beforeAll(async () => {
 
 test.beforeEach(async ({ page }) => {
     await page.goto(currentURL);
+    // page.on('request', request => console.log('>>', request.method(), request.url()));
+    let wsAdr = currentURL.replace(/http\w*:/, 'ws:');
+    page.on('websocket', ws => {
+        if (ws.url().includes(`${wsAdr}/ws?`)) {
+            websockets["video"] = ws;
+        }
+        if (ws.url().includes(`${wsAdr}/events?`)) {
+            websockets["events"] = ws;
+        }
+        console.log(`WebSocket opened: ${ws.url()}>`);
+        // console.log(ws);
+        
+        // ws.on('framesent', event => console.log(event.payload));
+        // ws.on('framereceived', event => console.log(event.payload));
+        // ws.on('close', () => console.log('WebSocket closed'));
+    });
     await page.getByLabel('Login').fill('root');
     await page.getByLabel('Password').fill('root');
     await page.getByLabel('Password').press('Enter');
@@ -148,15 +165,16 @@ test('Change width camera list (CLOUD-T122)', async ({ page }) => {
 test.only('Reltime list update (CLOUD-T123)', async ({ page }) => {
     // await createLayout(videoChannelList, 2, 2, "Test Layout");
     // await page.pause();
-
+    
+    // page.on('request', request => console.log('>>', request.method(), request.url()));
     await page.getByRole('button', { name: 'Hardware' }).click();
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "10", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "11", "Camera");
     await expect(page.getByRole('button', { name: '10.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '11.Camera', exact: true })).toBeVisible();
-    let socket = new WebSocket("ws://127.0.0.1/ws?auth_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIqLmQ1NWRmMWIzLTQyMjEtNDg3OC1iYzIwLTI0ZjU4NDZiN2Q5OCIsImV4cCI6MTY4MzkzMzk4NywiaWF0IjoxNjgzOTMzNjg3LCJpc3MiOiJERVNLVE9QLTBPRk5FTTkiLCJsZ24iOiJyb290IiwicmxzIjpbIjk3NDViOTAyLTJhMzYtNDAzNS1iZGQ2LTAxMmUwZGFlNjZjMCJdLCJyb2xlc19uYW1lcyI6WyJhZG1pbiJdLCJzaWQiOiJhMWM0NDVjYi1jOThkLTQxMWItODJhMC04OGEyNzZiMDM3YWQiLCJzdWIiOiIzMjhlMzg3NC00YTMzLTlkZDEtMjllYi00NGMzN2E0NDEyMWMifQ.U0qr2e9UJo2bUHQrtZii42fCnN2lsfypYmYKl9RyssBVRZQpOuoWTr_bRBF-Xw6iYwQRqtU9qYTFYklsTUj8NMdvMytB1ReZdN9BPMQbdJ4JfmbsjycIlRIj7gI5b3bQRTIP5r_7absrOX8CJtyqgUUnVNPJocNOlriaGqUllyQCedl4f2LgYTLTjyRRlbQarkJS8G0-P4m0Gmr1x6YYqQ9E7lUOXH_sTg9V1JABgup5Fc7lMLumiWnziJv3sKAbnXqR1LCp9sWmNsEyrC3zj_cMYH-d8fGZBfgCQGGOHcB0g2QcHa-rEZj3DXyol_ocu38WHe1JTicfdVhaJ7bBqw");
-    console.log(socket.url);
     await deleteCameras([createdUnits.cameras[createdUnits.cameras.length - 2], createdUnits.cameras[createdUnits.cameras.length - 1]]);
+    console.log(websockets.events.url());
+    console.log(websockets.video.url());
     await page.waitForTimeout(5000);  // лучше переписать
     expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
     expect(await page.getByRole('button', { name: '11.Camera', exact: true }).count()).toEqual(0);
