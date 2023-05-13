@@ -1,4 +1,4 @@
-import { test, expect, WebSocket} from '@playwright/test';
+import { test, expect,} from '@playwright/test';
 import { currentURL, createdUnits, hostName } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
@@ -7,10 +7,7 @@ import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo, chan
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-let websockets = {
-    events: {},
-    video: {}
-}; 
+import { isCameraListOpen } from "../utils/utils"
 
 let videoChannelList;
 let roleId = randomUUID();
@@ -76,26 +73,6 @@ test.beforeAll(async () => {
 
 test.beforeEach(async ({ page }) => {
     await page.goto(currentURL);
-    // page.on('request', request => console.log('>>', request.method(), request.url()));
-    let wsAdr = currentURL.replace(/http\w*:/, 'ws:');
-    page.on('websocket', ws => {
-        if (ws.url().includes(`${wsAdr}/ws?`)) {
-            websockets["video"] = ws;
-        }
-        if (ws.url().includes(`${wsAdr}/events?`)) {
-            websockets["events"] = ws;
-        }
-        console.log(`WebSocket opened: ${ws.url()}>`);
-        // console.log(ws);
-        
-        // ws.on('framesent', event => console.log(event.payload));
-        // ws.on('framereceived', event => {
-        //     if (typeof(event.payload) == typeof('') && event.payload.includes("hosts/DESKTOP-0OFNEM9/DeviceIpint.1/SourceEndpoint.video:0:0")) {
-        //         console.log(event.payload);
-        //     } 
-        // });
-        // ws.on('close', () => console.log('WebSocket closed'));
-    });
     await page.getByLabel('Login').fill('root');
     await page.getByLabel('Password').fill('root');
     await page.getByLabel('Password').press('Enter');
@@ -125,7 +102,7 @@ test.beforeEach(async ({ page }) => {
 
 
 test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
-    // await createLayout(videoChannelList, 2, 2, "Test Layout");
+    await createLayout(videoChannelList, 2, 2, "Test Layout");
     await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
     await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
@@ -168,45 +145,84 @@ test('Change width camera list (CLOUD-T122)', async ({ page }) => {
 });
 
 
-test.only('Reltime list update (CLOUD-T123)', async ({ page }) => {
-    // await createLayout(videoChannelList, 2, 2, "Test Layout");
-    await page.pause();
-    
-    // 
+test('Reltime list update (CLOUD-T123)', async ({ page }) => {
+    // await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "10", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "11", "Camera");
     await expect(page.getByRole('button', { name: '10.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '11.Camera', exact: true })).toBeVisible();
-    let promice = websockets.events.waitForEvent('framereceived', event => {
-        if (typeof(event.payload) == typeof('') && event.payload.includes("hosts/DESKTOP-0OFNEM9/DeviceIpint.11/SourceEndpoint.video:0:0") && event.payload.includes("cameralistupdate")) {
-            console.log(event.payload);
-            return true;
-        } 
-    });
     await deleteCameras([createdUnits.cameras[createdUnits.cameras.length - 2], createdUnits.cameras[createdUnits.cameras.length - 1]]);
-    await promice;
-    // console.log(websockets.events.url());
-    // console.log(websockets.video.url());
-    // await page.waitForTimeout(5000);  // лучше переписать
+    await page.waitForTimeout(5000);
     expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
     expect(await page.getByRole('button', { name: '11.Camera', exact: true }).count()).toEqual(0);
 });
 
-// test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page }) => {
-//     await createLayout(videoChannelList, 2, 2, "Test Layout");
-//     // await page.pause();
-//     await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
-//     await expect(page.locator('id=at-app-mode-live')).toBeVisible();
-//     await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '2.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '3.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '4.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '5.0.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '5.1.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '5.2.Camera', exact: true })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '5.3.Camera', exact: true })).toBeVisible();
-// });
+test('Check "Manually open and close" parameter (CLOUD-T124)', async ({ page }) => {
+    // await page.pause();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    expect(await isCameraListOpen(page)).toBeTruthy();
+    await page.getByRole('button', { name: '1.Camera', exact: true }).click();
+    await expect (page.locator('[role="gridcell"]').filter({hasText: /1\.Camera/})).toBeVisible();
+    expect(await isCameraListOpen(page)).toBeTruthy();
+    await page.locator('#at-layout-items').click();
+    expect(await isCameraListOpen(page)).toBeTruthy();
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Manually open and close').uncheck();
+    await page.locator("[role='dialog'] button:last-child").click();
+    await page.locator('#at-layout-items').click();
+    expect(await isCameraListOpen(page)).not.toBeTruthy();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.getByRole('button', { name: '3.Camera', exact: true }).click();
+    await expect (page.locator('[role="gridcell"]').filter({hasText: /3\.Camera/})).toBeVisible();
+    expect(await isCameraListOpen(page)).not.toBeTruthy();
+});
+
+test('Check camera preview in list (CLOUD-T125)', async ({ page }) => {
+    // await page.pause();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.waitForTimeout(5000);
+    let requestPromise = page.waitForRequest(request => request.url().includes(`${currentURL}/live/media/snapshot/${hostName}/DeviceIpint.1/SourceEndpoint.video:0:1`));
+    await page.getByRole('button', { name: '1.Camera', exact: true }).hover();
+    await requestPromise;
+    await expect(page.locator('[alt="1.Camera"]')).toHaveAttribute("src", /blob:.*/);
+    await page.getByRole('button', { name: '3.Camera', exact: true }).hover();
+    await expect(page.locator('[alt="3.Camera"]')).toHaveAttribute("src", /data:image.*/);
+    requestPromise = page.waitForRequest(request => request.url().includes(`${currentURL}/live/media/snapshot/${hostName}/DeviceIpint.5/SourceEndpoint.video:0:1`));
+    await page.getByRole('button', { name: '5.0.Camera', exact: true }).hover();
+    await requestPromise;
+    await expect(page.locator('[alt="5.0.Camera"]')).toHaveAttribute("src", /blob:.*/);
+    await page.getByRole('button', { name: '5.1.Camera', exact: true }).hover();
+    await expect(page.locator('[alt="5.1.Camera"]')).toHaveAttribute("src", /data:image.*/);
+});
+
+test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ page }) => {
+    // await page.pause();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.getByRole('button', { name: '1.Camera', exact: true }).click();
+    let cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    expect (cameraCountInLive).toEqual(1);
+    await expect (page.locator('.VideoCell__title__left').nth(0)).toHaveText("1.Camera");
+    await page.getByRole('button', { name: '5.0.Camera', exact: true }).click();
+    cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    expect (cameraCountInLive).toEqual(1);
+    await expect (page.locator('.VideoCell__title__left').nth(0)).toHaveText("5.0.Camera");
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Open selected camera on layout').check();
+    await page.locator("[role='dialog'] button:last-child").click();
+
+    await page.getByRole('button', { name: '1.Camera', exact: true }).click();
+    cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    expect (cameraCountInLive).toBeGreaterThan(1);
+    await expect (page.locator('.VideoCell__title__left').nth(0)).toHaveText("1.Camera");
+    await page.getByRole('button', { name: '5.0.Camera', exact: true }).click();
+    cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    expect (cameraCountInLive).toEqual(1);
+    await expect (page.locator('.VideoCell__title__left').nth(0)).toHaveText("5.0.Camera");
+});
 
 // test('Filter by imported file', async ({ page }) => {
 //     await page.goto(currentURL);
