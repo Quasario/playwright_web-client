@@ -225,7 +225,7 @@ test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ p
     await expect (page.locator('.VideoCell__title__left').nth(0)).toHaveText("5.0.Camera");
 });
 
-test.only('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) => {
+test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) => {
     // await page.pause();
     let cameraList = await getCurrentConfiguration();
 
@@ -255,6 +255,27 @@ test.only('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page
     };
 });
 
+
+test.only('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
+    //await page.pause();
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Show device IDs').uncheck();
+    await page.locator('[role="dialog"] button:last-child').click();
+    await page.getByRole('button', { name: 'Hardware'}).click();
+    await page.getByRole('button', { name: `Camera`, exact: true }).first().waitFor({state: 'attached', timeout: 5000});
+    expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toBeGreaterThanOrEqual(8);
+    await expect(page.getByRole('button', { name: `Sort the camera list by ID`, exact: true })).toBeHidden();
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Show device IDs').check();
+    await page.locator('[role="dialog"] button:last-child').click();
+    await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
+    expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toEqual(0);
+    await expect(page.getByRole('button', { name: `Sort the camera list by ID`, exact: true })).toBeVisible();
+});
 
 // test('Filter by imported file', async ({ page }) => {
 //     await page.goto(currentURL);
