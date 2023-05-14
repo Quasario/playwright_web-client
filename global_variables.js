@@ -12,12 +12,20 @@ export let createdUnits = {
     users: [],
     archives: [],
     layouts: []
-}
+};
+
+export let currentConfiguration = {
+    cameras: [],
+    roles: [],
+    users: [],
+    archives: [],
+    layouts: []
+};
 
 export function setGlobalHostName(hosts) {
     hostName = hosts[0];
     console.log(blue("host = " + hostName));
-}
+};
 
 // export let forbidAllPermissions = {
 //     "unrestricted_access": "UNRESTRICTED_ACCESS_NO",

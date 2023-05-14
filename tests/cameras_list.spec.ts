@@ -7,7 +7,7 @@ import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo, chan
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen } from "../utils/utils"
+import { isCameraListOpen, getCurrentConfiguration } from "../utils/utils.js"
 
 let videoChannelList;
 let roleId = randomUUID();
@@ -153,7 +153,8 @@ test('Reltime list update (CLOUD-T123)', async ({ page }) => {
     await expect(page.getByRole('button', { name: '10.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '11.Camera', exact: true })).toBeVisible();
     await deleteCameras([createdUnits.cameras[createdUnits.cameras.length - 2], createdUnits.cameras[createdUnits.cameras.length - 1]]);
-    await page.waitForTimeout(5000);
+    await page.getByRole('button', { name: `11.Camera`, exact: true }).waitFor({state: 'detached', timeout: 5000});
+    // await page.waitForTimeout(5000);
     expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
     expect(await page.getByRole('button', { name: '11.Camera', exact: true }).count()).toEqual(0);
 });
@@ -223,6 +224,37 @@ test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ p
     expect (cameraCountInLive).toEqual(1);
     await expect (page.locator('.VideoCell__title__left').nth(0)).toHaveText("5.0.Camera");
 });
+
+test.only('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) => {
+    // await page.pause();
+    let cameraList = await getCurrentConfiguration();
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Show only live cameras').check();
+    await page.locator('[role="dialog"] button:last-child').click();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    //ждем пока первая камера не появится в списке:
+    await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
+    for (let camera of cameraList) {
+        if (camera.isActivated) {
+            expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
+        } else {
+            expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(0);
+        }
+    };
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Preferences' }).click();
+    await page.getByLabel('Show only live cameras').uncheck();
+    await page.locator('[role="dialog"] button:last-child').click();
+    //ждем пока последняя камера не появится в списке:
+    await page.getByRole('button', { name: `5.3.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
+    for (let camera of cameraList) {
+        expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
+    };
+});
+
 
 // test('Filter by imported file', async ({ page }) => {
 //     await page.goto(currentURL);

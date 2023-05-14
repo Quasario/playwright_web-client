@@ -4,7 +4,7 @@ import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
-import { exchangeIndexCredentials } from '../node/fs.mjs';
+import { exchangeIndexCredentials } from '../utils/fs.mjs';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
 import { yellow, } from 'colors';
@@ -67,7 +67,6 @@ test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page })
     await page.getByLabel('Password').fill('');
     await expect(page.getByRole('button', { name: 'Log in' })).toBeDisabled();
 });
-
 
 test('Authorization attempt with an empty password (CLOUD-T154)', async ({ page }) => {
     await page.goto(currentURL);
