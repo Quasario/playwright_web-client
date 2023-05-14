@@ -256,7 +256,7 @@ test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) =
 });
 
 
-test.only('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
+test('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
     //await page.pause();
 
     await page.locator('#at-top-menu-btn').click();
@@ -275,6 +275,38 @@ test.only('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => 
     await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
     expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toEqual(0);
     await expect(page.getByRole('button', { name: `Sort the camera list by ID`, exact: true })).toBeVisible();
+});
+
+
+test.only('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
+    // await page.pause();
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    let cameraList = await getCurrentConfiguration();
+    await changeSingleCameraActiveStatus(cameraList[0].cameraBinding, false);
+    await changeSingleCameraActiveStatus(cameraList[1].cameraBinding, false);
+    await changeIPServerCameraActiveStatus(cameraList[4].videochannelID, false);
+    await page.waitForTimeout(5000);
+    cameraList = await getCurrentConfiguration();
+    for (let camera of cameraList) {
+        if (camera.isActivated) {
+            // await expect(page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true })).toHaveCSS("color", "rgb(250, 250, 250)");
+            await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
+        } else {
+            // await expect(page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true })).not.toHaveCSS("color", "rgb(250, 250, 250)");
+            await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).not.toHaveCSS("color", "rgb(250, 250, 250)");
+            //включаем камеры обратно
+            if (camera.displayId.includes(".")) {
+                await changeIPServerCameraActiveStatus(camera.videochannelID, true);
+            } else {
+                await changeSingleCameraActiveStatus(camera.cameraBinding, true);
+            }
+        }
+    };
+
+    for (let camera of cameraList) {
+        await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
+    };
 });
 
 // test('Filter by imported file', async ({ page }) => {
