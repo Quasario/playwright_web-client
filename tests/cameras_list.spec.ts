@@ -278,7 +278,7 @@ test('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
 });
 
 
-test.only('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
+test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware'}).click();
 
@@ -307,6 +307,38 @@ test.only('Reltime camera status change in list (CLOUD-T129)', async ({ page }) 
     for (let camera of cameraList) {
         await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
     };
+});
+
+test('Camera ID change (CLOUD-T130)', async ({ page }) => {
+    // await page.pause();
+    let cameraList = await getCurrentConfiguration();
+    await changeSingleCameraID(cameraList[0].cameraBinding, "100");
+    await changeSingleCameraID(cameraList[2].cameraBinding, "A");
+    await changeIPServerCameraID(cameraList[4].videochannelID, "11");
+    await changeIPServerCameraID(cameraList[6].videochannelID, "5");
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    await expect(page.getByRole('button', { name: `100.Camera`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: `A.Camera`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: `5.11.Camera`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: `5.5.Camera`, exact: true })).toBeVisible();
+});
+
+test.only('Camera name change (CLOUD-T131)', async ({ page }) => {
+    // await page.pause();
+    let cameraList = await getCurrentConfiguration();
+    await changeSingleCameraName(cameraList[1].cameraBinding, "Device");
+    await changeSingleCameraName(cameraList[3].cameraBinding, "221B Baker Street");
+    await changeIPServerCameraName(cameraList[5].videochannelID, "Кабинет 1-эт");
+    await changeIPServerCameraName(cameraList[7].videochannelID, "undefined");
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    await expect(page.getByRole('button', { name: `2.Device`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: `4.221B Baker Street`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: `5.1.Кабинет 1-эт`, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: `5.3.undefined`, exact: true })).toBeVisible();
 });
 
 // test('Filter by imported file', async ({ page }) => {
