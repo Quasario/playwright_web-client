@@ -296,7 +296,7 @@ test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
             // await expect(page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true })).not.toHaveCSS("color", "rgb(250, 250, 250)");
             await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).not.toHaveCSS("color", "rgb(250, 250, 250)");
             //включаем камеры обратно
-            if (camera.displayId.includes(".")) {
+            if (camera.isIpServer) {
                 await changeIPServerCameraActiveStatus(camera.videochannelID, true);
             } else {
                 await changeSingleCameraActiveStatus(camera.cameraBinding, true);
@@ -325,7 +325,7 @@ test('Camera ID change (CLOUD-T130)', async ({ page }) => {
     await expect(page.getByRole('button', { name: `5.5.Camera`, exact: true })).toBeVisible();
 });
 
-test.only('Camera name change (CLOUD-T131)', async ({ page }) => {
+test('Camera name change (CLOUD-T131)', async ({ page }) => {
     // await page.pause();
     let cameraList = await getCurrentConfiguration();
     await changeSingleCameraName(cameraList[1].cameraBinding, "Device");
@@ -339,6 +339,93 @@ test.only('Camera name change (CLOUD-T131)', async ({ page }) => {
     await expect(page.getByRole('button', { name: `4.221B Baker Street`, exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: `5.1.Кабинет 1-эт`, exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: `5.3.undefined`, exact: true })).toBeVisible();
+});
+
+test.only('Sort by name (CLOUD-T133)', async ({ page }) => {
+    // await page.pause();
+    let testCameraNames = [
+        {
+            fullId: "100",
+            id: "100",
+            name: "Smith & Wesson"
+        },
+        {
+            fullId: "2",
+            id: "2",
+            name: "Device"
+        },
+        {
+            fullId: "A",
+            id: "A",
+            name: "Camera"
+        },
+        {
+            fullId: "4",
+            id: "4",
+            name: "221B Baker Street"
+        },
+        {
+            fullId: "5.11",
+            id: "11",
+            name: `!@#$%^&*()_+=?<'>""/|\\.,~:;`
+        },
+        {
+            fullId: "5.1",
+            id: "1",
+            name: `Кабинет 1-эт`
+        },
+        {
+            fullId: "5.5",
+            id: "5",
+            name: `Площадь`
+        },
+        {
+            fullId: "5.3",
+            id: "3",
+            name: `undefined`
+        },
+    ];
+
+    let cameraList = await getCurrentConfiguration();
+    for (let i = 0; i < cameraList.length; i++) {
+        if (cameraList[i].displayId != testCameraNames[i].fullId) {
+            if (cameraList[i].isIpServer) {
+                await changeIPServerCameraID(cameraList[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(cameraList[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (cameraList[i].displayName != testCameraNames[i].name) {
+            if (cameraList[i].isIpServer) {
+                await changeIPServerCameraName(cameraList[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(cameraList[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+    await page.locator('.camera-list span>[type="button"]:nth-child(2)').click();
+    
+    await expect(page.locator('[draggable="true"]:nth-child(1)')).toHaveText('5.5.Площадь', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(2)')).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(3)')).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(4)')).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(5)')).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(6)')).toHaveText('A.Camera', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(7)')).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(8)')).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+
+    await page.locator('.camera-list span>[type="button"]:nth-child(2)').click();
+
+    await expect(page.locator('[draggable="true"]:nth-child(1)')).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(2)')).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(3)')).toHaveText('A.Camera', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(4)')).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(5)')).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(6)')).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(7)')).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[draggable="true"]:nth-child(8)')).toHaveText('5.5.Площадь', { ignoreCase: false });
 });
 
 // test('Filter by imported file', async ({ page }) => {

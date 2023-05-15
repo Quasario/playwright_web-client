@@ -13,9 +13,14 @@ export async function getCurrentConfiguration() {
     for (let camera of cameras) {
         let cameraVideochannel = camera.accessPoint.replace("SourceEndpoint.video:", "VideoChannel.").replace(/:\w*/, "");
         let cameraBinding = camera.accessPoint.replace(/\/SourceEndpoint.video:.*/, "");
+        let isIpServer = false;
+        if (camera.displayId.includes('.')) {
+            isIpServer = true;
+        };
 
         camera['videochannelID'] = cameraVideochannel;
         camera['cameraBinding'] = cameraBinding;
+        camera['isIpServer'] = isIpServer;
         
         newArr.push(camera);
     }
