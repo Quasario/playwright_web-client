@@ -107,8 +107,8 @@ export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual s
 }
 
 
-export async function deleteCameras(camerasEndpoints) {
-    let deleteArr = [];
+export async function deleteCameras(camerasEndpoints: Array<string>) {
+    let deleteArr = Array();
     for (let camera of camerasEndpoints) {
         deleteArr.push({"uid": camera})
     }
@@ -357,15 +357,15 @@ export async function changeIPServerCameraName(videoChannelEndpoint, newName) {
     } else console.log(`Error: Camera (${videoChannelEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
-export async function addVirtualVideo(camerasList, highStreamVideo, lowStreamVideo) {
-    for(let camera of camerasList) {
-
+export async function addVirtualVideo(videoChannelsEndpoints, highStreamVideo, lowStreamVideo) {
+    for(let videoChannelEndpoint of videoChannelsEndpoints) {
+        console.log(videoChannelEndpoint.uid);
         let body = {
             "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
             "data": {
                 "changed": [
                     {
-                        "uid": `${camera.videochannelID}/Streaming.0`,
+                        "uid": `${videoChannelEndpoint.uid}/Streaming.0`,
                         "type": "Streaming",
                         "properties": [
                             {
@@ -376,7 +376,7 @@ export async function addVirtualVideo(camerasList, highStreamVideo, lowStreamVid
                         "opaque_params": []
                     },
                     {
-                        "uid": `${camera.videochannelID}/Streaming.1`,
+                        "uid": `${videoChannelEndpoint.uid}/Streaming.1`,
                         "type": "Streaming",
                         "properties": [
                             {
@@ -401,8 +401,8 @@ export async function addVirtualVideo(camerasList, highStreamVideo, lowStreamVid
         let response = await request.json();
         
         if (request.ok && !response.failed.length) {
-            console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${camera.videochannelID}).`.green);
-        } else console.log(`Error: Coudn't add video to camera ${camera.videochannelID}. Code: ${request.status}, Failed: ${response.failed}`.red);
+            console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${videoChannelEndpoint.uid}).`.green);
+        } else console.log(`Error: Coudn't add video to camera ${videoChannelEndpoint}. Code: ${request.status}, Failed: ${response.failed}`.red);
     }
 };
 
