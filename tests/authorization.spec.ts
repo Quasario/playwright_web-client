@@ -1,5 +1,5 @@
 import { test, expect, } from '@playwright/test';
-import { currentURL, createdUnits, hostName, isLocalMachine } from '../global_variables';
+import { currentURL, Configuration, hostName, isLocalMachine } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
@@ -8,6 +8,7 @@ import { exchangeIndexCredentials } from '../utils/fs.mjs';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
 import { yellow, } from 'colors';
+import { configurationCollector, cameraAnnihilator, roleAnnihilator, userAnnihilator } from "../utils/utils.js";
 
 
 let roleId = randomUUID();
@@ -45,18 +46,22 @@ let userWithoutWEB = {
 
 test.beforeAll(async () => {
     await getHostName();
+    await roleAnnihilator();
+    await userAnnihilator();
     await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
     await createRole(roleId, 'Role');
     await setRolePermissions(roleId);
     await createUser(userId, "User");
     await assingUserRole(roleId, userId);
+    await configurationCollector();
+    console.log(Configuration);
 });
 
 test.afterAll(async () => {
-    console.log(createdUnits);
-    await deleteRoles(createdUnits.roles);
-    await deleteUsers(createdUnits.users);
-    await deleteCameras(createdUnits.cameras);
+    console.log(Configuration);
+    await roleAnnihilator();
+    await userAnnihilator();
+    await cameraAnnihilator([Configuration.cameras[0], Configuration.cameras[1]]);
     exchangeIndexCredentials("", "");
 });
 
@@ -107,26 +112,26 @@ test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
 });
 
 test('Authorization via index.html file (CLOUD-T633)', async ({ page }) => {
-    if (isLocalMachine) {
-        exchangeIndexCredentials("User", "admin123");
-        await page.goto(currentURL);
-        // await page.pause();
-        await page.locator('#at-top-menu-btn').click();
-        await expect(page.getByText('User', { exact: true })).toBeVisible();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.locator('#at-top-menu-btn').click();
-        await expect(page.getByText('User', { exact: true })).toBeVisible();
-        exchangeIndexCredentials("", "");
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
-        await page.locator('#at-top-menu-btn').click();
-        await expect(page.getByText('root', { exact: true })).toBeVisible(); 
-    } else {
+    if (!isLocalMachine) {
         console.log(yellow("Can't resolve test CLOUD-T633, it can be execute only if server stands on local machine"));
         test.skip();
     }
+    
+    exchangeIndexCredentials("User", "admin123");
+    await page.goto(currentURL);
+    // await page.pause();
+    await page.locator('#at-top-menu-btn').click();
+    await expect(page.getByText('User', { exact: true })).toBeVisible();
+    await page.getByRole('menuitem', { name: 'Change user' }).click();
+    await page.locator('#at-top-menu-btn').click();
+    await expect(page.getByText('User', { exact: true })).toBeVisible();
+    exchangeIndexCredentials("", "");
+    await page.getByRole('menuitem', { name: 'Change user' }).click();
+    await page.getByLabel('Login').fill('root');
+    await page.getByLabel('Password').fill('root');
+    await page.getByLabel('Password').press('Enter');
+    await page.locator('#at-top-menu-btn').click();
+    await expect(page.getByText('root', { exact: true })).toBeVisible(); 
 });
 
 test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page }) => {

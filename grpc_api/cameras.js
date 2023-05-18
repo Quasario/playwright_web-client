@@ -1,5 +1,6 @@
-import {currentURL, createdUnits, videoFolder, hostName} from '../global_variables';
+import { currentURL, videoFolder, hostName } from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
+import { configurationCollector } from "../utils/utils.js";
 
 // export async function getHostName() {
 //     let request = await fetch(`${currentURL}/hosts`, {
@@ -98,12 +99,10 @@ export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual s
         let response = await request.json();
 
         if (request.ok && !response.failed.length) {
-            createdUnits.cameras.push(response.added[0]);
             console.log(`Camera (${vendor}/${model}) №${i} was successfully created!`.green);
         } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     }
-
-    
+    await configurationCollector("cameras");
 }
 
 
@@ -128,11 +127,11 @@ export async function deleteCameras(camerasEndpoints) {
         body: JSON.stringify(body)
     });
     
-    if (request.ok) {
-        createdUnits.cameras = createdUnits.cameras.filter(i => !camerasEndpoints.includes(i)); //clear array from deleted items
+    if (request.ok) {  
         console.log(`Cameras ${camerasEndpoints.toString()} was successfully deleted!`.green);
-        console.log(createdUnits);
     } else console.log(`Error: could not delete cameras ${camerasEndpoints.toString()}. Code: ${request.status}`.red);
+
+    await configurationCollector("cameras");
 };
 
 
@@ -170,6 +169,8 @@ export async function changeSingleCameraActiveStatus(cameraEndpoint, bool=false)
     if (request.ok && !response.failed.length) {
         console.log(`Camera (${cameraEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
     } else console.log(`Error: Camera (${cameraEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
 };
 
 
@@ -207,6 +208,8 @@ export async function changeSingleCameraID(cameraEndpoint, newID) {
     if (request.ok && !response.failed.length) {
         console.log(`Camera (${cameraEndpoint}) friendly ID was changed to "${newID}".`.green);
     } else console.log(`Error: Camera (${cameraEndpoint}) friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
 };
 
 
@@ -244,6 +247,8 @@ export async function changeSingleCameraName(cameraEndpoint, newName) {
     if (request.ok && !response.failed.length) {
         console.log(`Camera (${cameraEndpoint}) name was changed to "${newName}".`.green);
     } else console.log(`Error: Camera (${cameraEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
 };
 
 
@@ -281,6 +286,8 @@ export async function changeIPServerCameraActiveStatus(videoChannelEndpoint, boo
     if (request.ok && !response.failed.length) {
         console.log(`Camera (${videoChannelEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
     } else console.log(`Error: Camera (${videoChannelEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
 };
 
 
@@ -318,6 +325,8 @@ export async function changeIPServerCameraID(videoChannelEndpoint, newID) {
     if (request.ok && !response.failed.length) {
         console.log(`Camera (${videoChannelEndpoint}) friendly ID was changed to "${newID}".`.green);
     } else console.log(`Error: Camera (${videoChannelEndpoint}) friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
 };
 
 
@@ -355,6 +364,8 @@ export async function changeIPServerCameraName(videoChannelEndpoint, newName) {
     if (request.ok && !response.failed.length) {
         console.log(`Camera (${videoChannelEndpoint}) name was changed to "${newName}".`.green);
     } else console.log(`Error: Camera (${videoChannelEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
 };
 
 export async function addVirtualVideo(camerasList, highStreamVideo, lowStreamVideo) {
@@ -432,69 +443,3 @@ export async function getUnitsList(endpoints) {
     } else console.log(`Error: Pull units information failed. Code: ${request.status}`.red);
 };
 
-
-export async function getVideChannelsList(camerasEndpoint) {
-    let videoChannels = [];
-    let camerasProps = [];
-    for (let cam of camerasEndpoint) {
-        let unit = await getUnitsList([cam]);
-        camerasProps.push(unit.units[0]);
-    };
-    // console.log(camerasProps);
-    
-    for (let camera of camerasProps) {
-        for (let channel of camera.units) {
-            if (channel.type == "VideoChannel") {
-                let videoChannelProps = {
-                    uid: channel.uid,
-                    accessPoint: channel.access_point,
-                    cameraBinding: channel.config_name,
-                };
-                videoChannels.push(videoChannelProps);
-            }
-        }
-        
-    };
-    console.log(videoChannels); //{ uid: 'hosts/DESKTOP-MQ5GFT5/DeviceIpint.22/VideoChannel.3', accessPoint: 'hosts/DESKTOP-MQ5GFT5/DeviceIpint.22/SourceEndpoint.video:3:0', cameraBinding: 'hosts/DESKTOP-MQ5GFT5/DeviceIpint.22', id: 25}
-    return(videoChannels);
-};
-
-
-// export async function getVideChannelsList(camerasEndpoint) {
-//     let videoChannels = [];
-//     let units = await getUnitsList(camerasEndpoint);
-
-//     for (let cameras of units.units) {
-//         for (let channel of cameras.units) {
-//             if (channel.type == "VideoChannel") {
-//                 videoChannels.push(channel.uid);
-//             }
-//         }
-        
-//     };
-//     console.log(videoChannels);
-//     return(videoChannels);
-// };
-
-
-// export async function getVideChannelsList(camerasEndpoint) {
-//     let videoChannels = [];
-//     let camerasProps = [];
-//     for (let cam of camerasEndpoint) {
-//         let unit = await getUnitsList([cam]);
-//         camerasProps.push(unit.units[0]);
-//     };
-//     console.log(camerasProps);
-    
-
-//     for (let camera of camerasProps) {
-//         for (let channel of camera.units) {
-//             if (channel.type == "VideoChannel") {
-//                 videoChannels.push(channel.uid);
-//             }
-//         }
-        
-//     };
-//     console.log(videoChannels);
-//     return(videoChannels);
-// };

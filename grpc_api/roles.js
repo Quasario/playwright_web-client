@@ -1,5 +1,30 @@
-import {currentURL, createdUnits, alloyAllPermisions} from '../global_variables';
+import { currentURL, alloyAllPermisions } from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
+import { configurationCollector } from "../utils/utils.js";
+
+
+export async function getRolesAndUsers() {
+    let body = {
+        "method":"axxonsoft.bl.security.SecurityService.ListConfig",
+        "data": {
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    let usersRolesList = await request.json();
+
+    if (request.ok) {
+        return usersRolesList;
+    } else console.log(`Error: could not pull roles & users list. Code: ${request.status}`.red);
+};
+
 
 export async function createRole(currentRoleId, roleName='Role') {
     let body = {
@@ -26,10 +51,12 @@ export async function createRole(currentRoleId, roleName='Role') {
     });
     
     if (request.ok) {
-        createdUnits.roles.push(currentRoleId);
+        
         console.log(`The role (${roleName}) was successfully created! UUID: ${currentRoleId}`.green);
     } else console.log(`Error: The role (${roleName}) was not created. Code: ${request.status}`.red);
-}
+
+    await configurationCollector("roles");
+};
 
 export async function setRolePermissions(currentRoleId, permissions) {
 
@@ -53,16 +80,16 @@ export async function setRolePermissions(currentRoleId, permissions) {
     if (request.ok) {
         console.log(`Permissions for role (${currentRoleId}) was successfully changed!`.green);
     } else console.log(`Error: could not set permissions for role (${currentRoleId}). Code: ${request.status}`.red);
-}
+};
 
 export async function deleteRoles(rolesID) {
 
-    let body =     {
+    let body = {
             "method": "axxonsoft.bl.security.SecurityService.ChangeConfig",
             "data": {
                 "removed_roles": rolesID
             }
-        };
+    };
 
     let request = await fetch(`${currentURL}/grpc`, {
         headers: {
@@ -73,8 +100,9 @@ export async function deleteRoles(rolesID) {
     });
     
     if (request.ok) {
-        createdUnits.roles = createdUnits.roles.filter(i => !rolesID.includes(i)); //clear array from deleted items
         console.log(`Roles was successfully deleted!`.green);
     } else console.log(`Error: could not delete roles. Code: ${request.status}`.red);
+
+    await configurationCollector("roles");
 };
 

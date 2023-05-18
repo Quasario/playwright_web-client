@@ -1,5 +1,6 @@
-import {currentURL, createdUnits} from '../global_variables';
+import { currentURL } from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
+import { configurationCollector } from "../utils/utils.js";
 
 export async function createUser(currentUserId, userName='User') {
     let body = {
@@ -28,9 +29,10 @@ export async function createUser(currentUserId, userName='User') {
     });
     
     if (request.ok) {
-        createdUnits.users.push(currentUserId);
         console.log(`The user (${userName}) was successfully created! UUID: ${currentUserId}`.green);
     } else console.log(`Error: The user(${userName}) was not created. Code: ${request.status}`.red);
+
+    await configurationCollector("users");
 }
 
 export async function setUserPassword(currentUserId, password="123") {
@@ -105,8 +107,9 @@ export async function deleteUsers(usersID) {
     });
     
     if (request.ok) {
-        createdUnits.users = createdUnits.users.filter(i => !usersID.includes(i)); //clear array from deleted items
         console.log(`Users was successfully deleted!`.green);
     } else console.log(`Error: could not delete users. Code: ${request.status}`.red);
+
+    await configurationCollector("users");
 };
 

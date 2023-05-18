@@ -1,6 +1,7 @@
-import {currentURL, createdUnits, videoFolder, hostName} from '../global_variables';
+import { currentURL, videoFolder, hostName } from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
 import { randomUUID } from 'node:crypto';
+import { configurationCollector } from "../utils/utils.js";
 
 
 export async function createLayout(camerasEndpoints, width=2, height=2, layoutName="New Layout") {
@@ -107,9 +108,10 @@ export async function createLayout(camerasEndpoints, width=2, height=2, layoutNa
     let response = await request.json();
 
     if (request.ok && !response.failed?.length) {
-        createdUnits.layouts.push(response.created_layouts[0]);
         console.log(`Layout "${layoutName}" (${width}x${height}) was successfully created! UUID: ${layoutUUID}`.green);
-    } else console.log(`Error: Layout "${layoutName}" (${width}x${height}) was not created. Code: ${request.status}, Failed: ${response.failed}`.red);    
+    } else console.log(`Error: Layout "${layoutName}" (${width}x${height}) was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
+    
+    await configurationCollector("layouts");
 };
 
 
@@ -131,9 +133,10 @@ export async function deleteLayouts(layoutsID) {
     });
     
     if (request.ok) {
-        createdUnits.layouts = createdUnits.layouts.filter(i => !layoutsID.includes(i)); //clear array from deleted items
         console.log(`Layots ${layoutsID.toString()} was successfully deleted!`.green);
     } else console.log(`Error: could not delete layouts ${layoutsID.toString()}. Code: ${request.status}`.red);
+
+    await configurationCollector("layouts");
 };
 
 

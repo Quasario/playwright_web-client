@@ -6,20 +6,14 @@ export let isLocalMachine = true; //если тесты и сервер нахо
 export let hostName;
 export let videoFolder = 'D:/demovideo';
 export let archiveDirection = 'C:/arch';
-export let createdUnits = {
-    cameras: [],
-    roles: [],
-    users: [],
-    archives: [],
-    layouts: []
-};
 
-export let currentConfiguration = {
-    cameras: [],
-    roles: [],
-    users: [],
-    archives: [],
-    layouts: []
+
+export let Configuration = {
+    cameras: Array(),
+    roles: Array(),
+    users: Array(),
+    archives: Array(),
+    layouts: Array()
 };
 
 export function setGlobalHostName(hosts) {

@@ -1,13 +1,13 @@
 import { test, expect,} from '@playwright/test';
-import { currentURL, createdUnits, hostName } from '../global_variables';
+import { currentURL, Configuration, hostName } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
-import { createCamera, deleteCameras, getVideChannelsList, addVirtualVideo, changeSingleCameraActiveStatus, changeIPServerCameraActiveStatus, changeSingleCameraID, changeSingleCameraName, changeIPServerCameraID, changeIPServerCameraName} from '../grpc_api/cameras';
+import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveStatus, changeIPServerCameraActiveStatus, changeSingleCameraID, changeSingleCameraName, changeIPServerCameraID, changeIPServerCameraName} from '../grpc_api/cameras';
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, configurationCollector } from "../utils/utils.js";
 
 let workerCount = 0;
 // let videoChannelList;
@@ -48,6 +48,7 @@ let userWithoutWEB = {
 test.beforeAll(async () => {
 
     await getHostName();
+    await configurationCollector();
     await cameraAnnihilator();
     await layoutAnnihilator();
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
@@ -55,15 +56,14 @@ test.beforeAll(async () => {
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
-    console.log(createdUnits.cameras);
+    console.log(Configuration);
     // videoChannelList = await getVideChannelsList(createdUnits.cameras);
-    let cameraList = await getCameraList();
-    await addVirtualVideo(cameraList, "lprusa", "tracker");
-    await changeSingleCameraActiveStatus(cameraList[2].cameraBinding, false);
-    await changeIPServerCameraActiveStatus(cameraList[5].videochannelID, false);
-    await changeIPServerCameraActiveStatus(cameraList[6].videochannelID, false);
-    for (let camera of cameraList) {
-        if(camera.isIpServer){
+    await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
+    await changeSingleCameraActiveStatus(Configuration.cameras[2].cameraBinding, false);
+    await changeIPServerCameraActiveStatus(Configuration.cameras[5].videochannelID, false);
+    await changeIPServerCameraActiveStatus(Configuration.cameras[6].videochannelID, false);
+    for (let camera of Configuration.cameras) {
+        if (camera.isIpServer){
             await changeIPServerCameraName(camera.videochannelID, "Camera");
         }
     }
@@ -162,7 +162,7 @@ test('Reltime list update (CLOUD-T123)', async ({ page }) => {
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "11", "Camera");
     await expect(page.getByRole('button', { name: '10.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '11.Camera', exact: true })).toBeVisible();
-    await deleteCameras([createdUnits.cameras[createdUnits.cameras.length - 2], createdUnits.cameras[createdUnits.cameras.length - 1]]);
+    await deleteCameras([Configuration.cameras[Configuration.cameras.length - 2].cameraBinding, Configuration.cameras[Configuration.cameras.length - 1].cameraBinding]);
     await page.getByRole('button', { name: `11.Camera`, exact: true }).waitFor({state: 'detached', timeout: 5000});
     // await page.waitForTimeout(5000);
     expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
@@ -241,7 +241,6 @@ test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ p
 
 test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) => {
     // await page.pause();
-    let cameraList = await getCameraList();
 
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
@@ -250,7 +249,7 @@ test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) =
     await page.getByRole('button', { name: 'Hardware' }).click();
     //ждем пока первая камера не появится в списке:
     await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
-    for (let camera of cameraList) {
+    for (let camera of Configuration.cameras) {
         if (camera.isActivated) {
             expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
         } else {
@@ -264,7 +263,7 @@ test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) =
     await page.locator('[role="dialog"] button:last-child').click();
     //ждем пока последняя камера не появится в списке:
     await page.getByRole('button', { name: `5.3.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
-    for (let camera of cameraList) {
+    for (let camera of Configuration.cameras) {
         expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
     };
 });
@@ -296,13 +295,12 @@ test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware'}).click();
 
-    let cameraList = await getCameraList();
-    await changeSingleCameraActiveStatus(cameraList[0].cameraBinding, false);
-    await changeSingleCameraActiveStatus(cameraList[1].cameraBinding, false);
-    await changeIPServerCameraActiveStatus(cameraList[4].videochannelID, false);
+    await changeSingleCameraActiveStatus(Configuration.cameras[0].cameraBinding, false);
+    await changeSingleCameraActiveStatus(Configuration.cameras[1].cameraBinding, false);
+    await changeIPServerCameraActiveStatus(Configuration.cameras[4].videochannelID, false);
     await page.waitForTimeout(5000);
-    cameraList = await getCameraList();
-    for (let camera of cameraList) {
+
+    for (let camera of Configuration.cameras) {
         if (camera.isActivated) {
             // await expect(page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true })).toHaveCSS("color", "rgb(250, 250, 250)");
             await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
@@ -318,18 +316,18 @@ test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
         }
     };
 
-    for (let camera of cameraList) {
+    for (let camera of Configuration.cameras) {
         await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
     };
 });
 
 test('Camera ID change (CLOUD-T130)', async ({ page }) => {
     // await page.pause();
-    let cameraList = await getCameraList();
-    await changeSingleCameraID(cameraList[0].cameraBinding, "100");
-    await changeSingleCameraID(cameraList[2].cameraBinding, "A");
-    await changeIPServerCameraID(cameraList[4].videochannelID, "11");
-    await changeIPServerCameraID(cameraList[6].videochannelID, "5");
+
+    await changeSingleCameraID(Configuration.cameras[0].cameraBinding, "100");
+    await changeSingleCameraID(Configuration.cameras[2].cameraBinding, "A");
+    await changeIPServerCameraID(Configuration.cameras[4].videochannelID, "11");
+    await changeIPServerCameraID(Configuration.cameras[6].videochannelID, "5");
 
     await page.getByRole('button', { name: 'Hardware'}).click();
 
@@ -341,11 +339,11 @@ test('Camera ID change (CLOUD-T130)', async ({ page }) => {
 
 test('Camera name change (CLOUD-T131)', async ({ page }) => {
     // await page.pause();
-    let cameraList = await getCameraList();
-    await changeSingleCameraName(cameraList[1].cameraBinding, "Device");
-    await changeSingleCameraName(cameraList[3].cameraBinding, "221B Baker Street");
-    await changeIPServerCameraName(cameraList[5].videochannelID, "Кабинет 1-эт");
-    await changeIPServerCameraName(cameraList[7].videochannelID, "undefined");
+
+    await changeSingleCameraName(Configuration.cameras[1].cameraBinding, "Device");
+    await changeSingleCameraName(Configuration.cameras[3].cameraBinding, "221B Baker Street");
+    await changeIPServerCameraName(Configuration.cameras[5].videochannelID, "Кабинет 1-эт");
+    await changeIPServerCameraName(Configuration.cameras[7].videochannelID, "undefined");
 
     await page.getByRole('button', { name: 'Hardware'}).click();
 
@@ -400,20 +398,19 @@ test('Sort by name (CLOUD-T133)', async ({ page }) => {
         },
     ];
 
-    let cameraList = await getCameraList();
-    for (let i = 0; i < cameraList.length; i++) {
-        if (cameraList[i].displayId != testCameraNames[i].fullId) {
-            if (cameraList[i].isIpServer) {
-                await changeIPServerCameraID(cameraList[i].videochannelID, testCameraNames[i].id);
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
             } else {
-                await changeSingleCameraID(cameraList[i].cameraBinding, testCameraNames[i].id);
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
             }
         }
-        if (cameraList[i].displayName != testCameraNames[i].name) {
-            if (cameraList[i].isIpServer) {
-                await changeIPServerCameraName(cameraList[i].videochannelID, testCameraNames[i].name);
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
             } else {
-                await changeSingleCameraName(cameraList[i].cameraBinding, testCameraNames[i].name);
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
             }
         }
     }
