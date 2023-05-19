@@ -147,3 +147,19 @@ export async function configurationCollector(type = "all") {
 
     }
 }
+
+export function getIdByUserName(userName) {
+    for (let user of Configuration.users) {
+        if (userName === user.login) { 
+            return user.index;
+        }
+    }
+};
+
+export function getIdByRoleName(roleName) {
+    for (let role of Configuration.roles) {
+        if (roleName === role.name) { 
+            return role.index;
+        }
+    }
+};

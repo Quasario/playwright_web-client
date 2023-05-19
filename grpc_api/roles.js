@@ -1,6 +1,7 @@
 import { currentURL, alloyAllPermisions } from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
-import { configurationCollector } from "../utils/utils.js";
+import { configurationCollector, getIdByRoleName } from "../utils/utils.js";
+import { randomUUID } from 'node:crypto';
 
 
 export async function getRolesAndUsers() {
@@ -26,13 +27,15 @@ export async function getRolesAndUsers() {
 };
 
 
-export async function createRole(currentRoleId, roleName='Role') {
+export async function createRole(roleName='Role') {
+    let roleId = randomUUID();
+
     let body = {
         "method": "axxonsoft.bl.security.SecurityService.ChangeConfig",
         "data": {
             "added_roles": [
                 {
-                    "index": currentRoleId,
+                    "index": roleId,
                     "name": roleName,
                     "comment": "",
                     "timezone_id": "",
@@ -51,20 +54,19 @@ export async function createRole(currentRoleId, roleName='Role') {
     });
     
     if (request.ok) {
-        
-        console.log(`The role (${roleName}) was successfully created! UUID: ${currentRoleId}`.green);
+        console.log(`The role (${roleName}) was successfully created! UUID: ${roleId}`.green);
     } else console.log(`Error: The role (${roleName}) was not created. Code: ${request.status}`.red);
 
     await configurationCollector("roles");
 };
 
-export async function setRolePermissions(currentRoleId, permissions) {
+export async function setRolePermissions(roleName, permissions) {
 
     let body = {
         "method": "axxonsoft.bl.security.SecurityService.SetGlobalPermissions",
         "data": {
             "permissions": {
-                [currentRoleId]: permissions || alloyAllPermisions
+                [getIdByRoleName(roleName)]: permissions || alloyAllPermisions
             }
         }
     };
@@ -78,8 +80,8 @@ export async function setRolePermissions(currentRoleId, permissions) {
     });
     
     if (request.ok) {
-        console.log(`Permissions for role (${currentRoleId}) was successfully changed!`.green);
-    } else console.log(`Error: could not set permissions for role (${currentRoleId}). Code: ${request.status}`.red);
+        console.log(`Permissions for role "${roleName}" was successfully changed!`.green);
+    } else console.log(`Error: could not set permissions for role "${roleName}". Code: ${request.status}`.red);
 };
 
 export async function deleteRoles(rolesID) {

@@ -5,14 +5,12 @@ import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
 import { exchangeIndexCredentials } from '../utils/fs.mjs';
-import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
 import { yellow, } from 'colors';
 import { configurationCollector, cameraAnnihilator, roleAnnihilator, userAnnihilator } from "../utils/utils.js";
+let role = "Role";
+let user = "User";
 
-
-let roleId = randomUUID();
-let userId = randomUUID();
 let userWithoutWEB = {
     "feature_access": [
         "FEATURE_ACCESS_DEVICES_SETUP",
@@ -49,16 +47,18 @@ test.beforeAll(async () => {
     await roleAnnihilator();
     await userAnnihilator();
     await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
-    await createRole(roleId, 'Role');
-    await setRolePermissions(roleId);
-    await createUser(userId, "User");
-    await assingUserRole(roleId, userId);
+    await createRole(role);
+    await setRolePermissions(role);
+    await createUser(user);
+    await assingUserRole(role, user);
     await configurationCollector();
-    console.log(Configuration);
+    console.log(Configuration.users);
+    console.log(Configuration.roles);
 });
 
 test.afterAll(async () => {
-    console.log(Configuration);
+    console.log(Configuration.users);
+    console.log(Configuration.roles);
     await roleAnnihilator();
     await userAnnihilator();
     await cameraAnnihilator([Configuration.cameras[0], Configuration.cameras[1]]);
@@ -83,7 +83,7 @@ test('Authorization attempt with an empty password (CLOUD-T154)', async ({ page 
 });
 
 test('Authorization with an empty password (CLOUD-T633)', async ({ page }) => {
-    await setUserPassword(userId, '')
+    await setUserPassword(user, '')
     await page.goto(currentURL);
     // await page.pause();
     await page.getByLabel('Login').fill('user');
@@ -93,7 +93,7 @@ test('Authorization with an empty password (CLOUD-T633)', async ({ page }) => {
 });
 
 test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
-    await setUserPassword(userId, 'admin123');
+    await setUserPassword(user, 'admin123');
     await page.goto(currentURL);
     // await page.pause();
     await page.getByLabel('Login').fill('root');
@@ -135,7 +135,7 @@ test('Authorization via index.html file (CLOUD-T633)', async ({ page }) => {
 });
 
 test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page }) => {
-    await setRolePermissions(roleId, userWithoutWEB);
+    await setRolePermissions(role, userWithoutWEB);
     await page.goto(currentURL);
     // await page.pause();
     await page.getByLabel('Login').fill('user');

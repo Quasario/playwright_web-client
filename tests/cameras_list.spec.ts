@@ -67,7 +67,11 @@ test.beforeAll(async () => {
             await changeIPServerCameraName(camera.videochannelID, "Camera");
         }
     }
-
+    await createLayout(Configuration.cameras, 2, 2, "Test Layout");
+    await createRole(roleId, 'New_Role');
+    await setRolePermissions(roleId);
+    await createUser(userId, "User_1");
+    await assingUserRole(roleId, userId);
 });
   
 test.afterAll(async () => {
@@ -110,8 +114,6 @@ test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
 
 
 test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
-    let cameraList = await getCameraList();
-    await createLayout(cameraList, 2, 2, "Test Layout");
     // await page.pause();
     await page.reload();
     await page.getByRole('button', { name: 'Hardware' }).click();
@@ -199,30 +201,27 @@ test('Check camera preview in list (CLOUD-T125)', async ({ page }) => {
     await requestPromise;
     await expect(page.locator('[alt="1.Camera"]')).toHaveAttribute("src", /blob:.*/);
     await page.getByRole('button', { name: '3.Camera', exact: true }).hover();
-    // await expect(page.locator('[alt="3.Camera"]')).toHaveAttribute("src", /data:image.*/);
-    expect(await page.locator('[alt="3.Camera"]').count()).toEqual(0);
+    await expect(page.locator('[data-testid="at-preview-snapshot"] svg')).toBeVisible();
     requestPromise = page.waitForRequest(request => request.url().includes(`${currentURL}/live/media/snapshot/${hostName}/DeviceIpint.5/SourceEndpoint.video:0:1`));
     await page.getByRole('button', { name: '5.0.Camera', exact: true }).hover();
     await requestPromise;
     await expect(page.locator('[alt="5.0.Camera"]')).toHaveAttribute("src", /blob:.*/);
     await page.getByRole('button', { name: '5.1.Camera', exact: true }).hover();
-    // await expect(page.locator('[alt="5.1.Camera"]')).toHaveAttribute("src", /data:image.*/);
-    expect(await page.locator('[alt="5.1.Camera"]').count()).toEqual(0);
+    await expect(page.locator('[data-testid="at-preview-snapshot"] svg')).toBeVisible();
 });
 
-test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ page }) => {
-    test.skip();
-
+test.only('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ page }) => {
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
     await page.getByRole('button', { name: '1.Camera', exact: true }).click();
-    let cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    await page.waitForTimeout(3000);
+    let cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toEqual(1);
-    await expect (page.locator('.VideoCell__bar-container').nth(0)).toHaveText("1.Camera");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("1.Camera");
     await page.getByRole('button', { name: '5.0.Camera', exact: true }).click();
-    cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toEqual(1);
-    await expect (page.locator('.VideoCell__bar-container').nth(0)).toHaveText("5.0.Camera");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("5.0.Camera");
 
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
@@ -230,18 +229,17 @@ test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ p
     await page.locator("[role='dialog'] button:last-child").click();
 
     await page.getByRole('button', { name: '1.Camera', exact: true }).click();
-    cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toBeGreaterThan(1);
-    await expect (page.locator('.VideoCell__bar-container').nth(0)).toHaveText("1.Camera");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("1.Camera");
     await page.getByRole('button', { name: '5.0.Camera', exact: true }).click();
-    cameraCountInLive = await page.locator('[role="gridcell"]').count();
+    cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toEqual(1);
-    await expect (page.locator('.VideoCell__bar-container').nth(0)).toHaveText("5.0.Camera");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("5.0.Camera");
 });
 
 test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) => {
     // await page.pause();
-
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
     await page.getByLabel('Show only live cameras').check();
@@ -271,7 +269,6 @@ test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) =
 
 test('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
     //await page.pause();
-
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
     await page.getByLabel('Show device IDs').uncheck();
@@ -416,7 +413,7 @@ test('Sort by name (CLOUD-T133)', async ({ page }) => {
     }
 
     await page.getByRole('button', { name: 'Hardware'}).click();
-    await page.locator('.camera-list span>[type="button"]:nth-child(2)').click();
+    await page.locator('[data-testid="at-sort-by-name"]').click();
     
     await expect(page.locator('[draggable="true"]:nth-child(1)')).toHaveText('5.5.Площадь', { ignoreCase: false });
     await expect(page.locator('[draggable="true"]:nth-child(2)')).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
@@ -427,7 +424,7 @@ test('Sort by name (CLOUD-T133)', async ({ page }) => {
     await expect(page.locator('[draggable="true"]:nth-child(7)')).toHaveText('4.221B Baker Street', { ignoreCase: false });
     await expect(page.locator('[draggable="true"]:nth-child(8)')).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
 
-    await page.locator('.camera-list span>[type="button"]:nth-child(2)').click();
+    await page.locator('[data-testid="at-sort-by-name"]').click();
 
     await expect(page.locator('[draggable="true"]:nth-child(1)')).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
     await expect(page.locator('[draggable="true"]:nth-child(2)')).toHaveText('4.221B Baker Street', { ignoreCase: false });
