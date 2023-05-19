@@ -46,7 +46,6 @@ let userWithoutWEB = {
 }
 
 test.beforeAll(async () => {
-
     await getHostName();
     await configurationCollector();
     await cameraAnnihilator();
@@ -56,8 +55,13 @@ test.beforeAll(async () => {
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
     await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
+    await createLayout(Configuration.cameras, 2, 2, "Test Layout");
+    await createRole("New_Role");
+    await setRolePermissions("New_Role");
+    await createUser("User_1");
+    await assingUserRole("New_Role", "User_1");
+    await setUserPassword("User_1", "123");
     console.log(Configuration);
-    // videoChannelList = await getVideChannelsList(createdUnits.cameras);
     await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
     await changeSingleCameraActiveStatus(Configuration.cameras[2].cameraBinding, false);
     await changeIPServerCameraActiveStatus(Configuration.cameras[5].videochannelID, false);
@@ -67,11 +71,6 @@ test.beforeAll(async () => {
             await changeIPServerCameraName(camera.videochannelID, "Camera");
         }
     }
-    await createLayout(Configuration.cameras, 2, 2, "Test Layout");
-    await createRole(roleId, 'New_Role');
-    await setRolePermissions(roleId);
-    await createUser(userId, "User_1");
-    await assingUserRole(roleId, userId);
 });
   
 test.afterAll(async () => {
@@ -97,6 +96,13 @@ test.beforeEach(async ({ page }) => {
 
 test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
     // await page.pause();
+    //Авторизация к юзеру без раскладок
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Change user' }).click();
+    await page.getByLabel('Login').fill('User_1');
+    await page.getByLabel('Password').fill('123');
+    await page.getByLabel('Password').press('Enter');
+    //Проверяем что камеры на месте
     await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '2.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '3.Camera', exact: true })).toBeVisible();
@@ -105,6 +111,7 @@ test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
     await expect(page.getByRole('button', { name: '5.1.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '5.2.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '5.3.Camera', exact: true })).toBeVisible();
+    //Проверяем цвета камер в списке, чтобы включенные камеры были белыми, а выключенные нет
     await expect(page.locator("xpath=//*/p/span[text()='1.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
     await expect(page.locator("xpath=//*/p/span[text()='3.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
     await expect(page.locator("xpath=//*/p/span[text()='5.0.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
@@ -115,8 +122,8 @@ test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
 
 test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
     // await page.pause();
-    await page.reload();
     await page.getByRole('button', { name: 'Hardware' }).click();
+    //Проверяем что камеры на месте
     await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '2.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '3.Camera', exact: true })).toBeVisible();
@@ -125,12 +132,14 @@ test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
     await expect(page.getByRole('button', { name: '5.1.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '5.2.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '5.3.Camera', exact: true })).toBeVisible();
+    //Проверяем цвета камер в списке, чтобы включенные камеры были белыми, а выключенные нет
     await expect(page.locator("xpath=//*/p/span[text()='1.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
     await expect(page.locator("xpath=//*/p/span[text()='3.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
     await expect(page.locator("xpath=//*/p/span[text()='5.0.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
     await expect(page.locator("xpath=//*/p/span[text()='5.1.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
     await expect(page.locator("xpath=//*/p/span[text()='5.2.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
     await page.getByRole('button', { name: 'Hardware' }).click();
+    //Проверяем что панель действительно закрылась
     await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeHidden();
 });
 
@@ -144,7 +153,9 @@ test('Change width camera list (CLOUD-T122)', async ({ page }) => {
     await page.mouse.up();
     await page.getByRole('button', { name: 'Hardware' }).click();
     await page.getByRole('button', { name: 'Hardware' }).click();
+    //Берем размер панели из локалстораджа
     let listWidth = await page.evaluate(() => window.localStorage.getItem('cameraList'));
+    //Сравниваем размер панели с тем что мы ранее двигали до 400px
     expect(Number(listWidth) == 400).toBeTruthy();
     await page.locator('.camera-list [role=none]').hover();
     await page.mouse.down();
@@ -165,8 +176,8 @@ test('Reltime list update (CLOUD-T123)', async ({ page }) => {
     await expect(page.getByRole('button', { name: '10.Camera', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '11.Camera', exact: true })).toBeVisible();
     await deleteCameras([Configuration.cameras[Configuration.cameras.length - 2].cameraBinding, Configuration.cameras[Configuration.cameras.length - 1].cameraBinding]);
+    //Ждем пока удаленные камеры не исчезнут из списка
     await page.getByRole('button', { name: `11.Camera`, exact: true }).waitFor({state: 'detached', timeout: 5000});
-    // await page.waitForTimeout(5000);
     expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
     expect(await page.getByRole('button', { name: '11.Camera', exact: true }).count()).toEqual(0);
 });
@@ -175,11 +186,14 @@ test('Check "Manually open and close" parameter (CLOUD-T124)', async ({ page }) 
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
     expect(await isCameraListOpen(page)).toBeTruthy();
+    //Кликаем на камеру и смотим чтобы список не закрылся
     await page.getByRole('button', { name: '1.Camera', exact: true }).click();
     await expect (page.locator('[role="gridcell"]').filter({hasText: /1\.Camera/})).toBeVisible();
     expect(await isCameraListOpen(page)).toBeTruthy();
+    //Кликаем на панель с раскладками и смотрим чтобы список не закрылся
     await page.locator('#at-layout-items').click();
     expect(await isCameraListOpen(page)).toBeTruthy();
+    //Отключаем параметр
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
     await page.getByLabel('Manually open and close').uncheck();
@@ -195,12 +209,15 @@ test('Check "Manually open and close" parameter (CLOUD-T124)', async ({ page }) 
 test('Check camera preview in list (CLOUD-T125)', async ({ page }) => {
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
+    //Таймаут чтобы список успел прогрузится
     await page.waitForTimeout(5000);
+    //Слушаем поток запросов 
     let requestPromise = page.waitForRequest(request => request.url().includes(`${currentURL}/live/media/snapshot/${hostName}/DeviceIpint.1/SourceEndpoint.video:0:1`));
     await page.getByRole('button', { name: '1.Camera', exact: true }).hover();
     await requestPromise;
     await expect(page.locator('[alt="1.Camera"]')).toHaveAttribute("src", /blob:.*/);
     await page.getByRole('button', { name: '3.Camera', exact: true }).hover();
+    //Снапшоты с заглушкой несут не картинку, а svg
     await expect(page.locator('[data-testid="at-preview-snapshot"] svg')).toBeVisible();
     requestPromise = page.waitForRequest(request => request.url().includes(`${currentURL}/live/media/snapshot/${hostName}/DeviceIpint.5/SourceEndpoint.video:0:1`));
     await page.getByRole('button', { name: '5.0.Camera', exact: true }).hover();
@@ -210,18 +227,21 @@ test('Check camera preview in list (CLOUD-T125)', async ({ page }) => {
     await expect(page.locator('[data-testid="at-preview-snapshot"] svg')).toBeVisible();
 });
 
-test.only('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ page }) => {
+test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ page }) => {
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
     await page.getByRole('button', { name: '1.Camera', exact: true }).click();
-    await page.waitForTimeout(3000);
+    //Так как DOM выборе камеры перестраивается, то нужно подождать пока элементы снова в нем появятся иначе count() выдаст 0
+    await page.locator('[data-testid="at-camera-title"]').first().waitFor({state: 'attached', timeout: 5000});
     let cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toEqual(1);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("1.Camera");
+
     await page.getByRole('button', { name: '5.0.Camera', exact: true }).click();
+    await page.locator('[data-testid="at-camera-title"]').first().waitFor({state: 'attached', timeout: 5000});
     cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toEqual(1);
-    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("5.0.Camera");
+    await expect (page.locator('[data-testid="at-camera-title"]').first().nth(0)).toHaveText("5.0.Camera");
 
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
@@ -229,10 +249,13 @@ test.only('Check "Open selected camera on layout" parameter (CLOUD-T126)', async
     await page.locator("[role='dialog'] button:last-child").click();
 
     await page.getByRole('button', { name: '1.Camera', exact: true }).click();
+    await page.locator('[data-testid="at-camera-title"]').first().waitFor({state: 'attached', timeout: 5000});
     cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toBeGreaterThan(1);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("1.Camera");
+
     await page.getByRole('button', { name: '5.0.Camera', exact: true }).click();
+    await page.locator('[data-testid="at-camera-title"]').first().waitFor({state: 'attached', timeout: 5000});
     cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
     expect (cameraCountInLive).toEqual(1);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("5.0.Camera");
@@ -245,8 +268,9 @@ test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) =
     await page.getByLabel('Show only live cameras').check();
     await page.locator('[role="dialog"] button:last-child').click();
     await page.getByRole('button', { name: 'Hardware' }).click();
-    //ждем пока первая камера не появится в списке:
+    //Ждем пока первая камера не появится в списке:
     await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
+    //Смотрим что выключенных камер нет в списке
     for (let camera of Configuration.cameras) {
         if (camera.isActivated) {
             expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
@@ -259,7 +283,7 @@ test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) =
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
     await page.getByLabel('Show only live cameras').uncheck();
     await page.locator('[role="dialog"] button:last-child').click();
-    //ждем пока последняя камера не появится в списке:
+    //Ждем пока последняя камера не появится в списке:
     await page.getByRole('button', { name: `5.3.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
     for (let camera of Configuration.cameras) {
         expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
@@ -274,9 +298,11 @@ test('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
     await page.getByLabel('Show device IDs').uncheck();
     await page.locator('[role="dialog"] button:last-child').click();
     await page.getByRole('button', { name: 'Hardware'}).click();
+    //Ждем пока в DOM добавится первая камера из списка
     await page.getByRole('button', { name: `Camera`, exact: true }).first().waitFor({state: 'attached', timeout: 5000});
-    expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toBeGreaterThanOrEqual(8);
-    await expect(page.getByRole('button', { name: `Sort the camera list by ID`, exact: true })).toBeHidden();
+    expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toEqual(8);
+    //Когда отключаем отображение ID, то и кнопка сортировки должна пропасть
+    await expect(page.locator('[data-testid="at-sort-by-id"]')).toBeHidden();
 
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Preferences' }).click();
@@ -284,7 +310,7 @@ test('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
     await page.locator('[role="dialog"] button:last-child').click();
     await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
     expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toEqual(0);
-    await expect(page.getByRole('button', { name: `Sort the camera list by ID`, exact: true })).toBeVisible();
+    await expect(page.locator('[data-testid="at-sort-by-id"]')).toBeVisible();
 });
 
 
@@ -296,15 +322,13 @@ test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
     await changeSingleCameraActiveStatus(Configuration.cameras[1].cameraBinding, false);
     await changeIPServerCameraActiveStatus(Configuration.cameras[4].videochannelID, false);
     await page.waitForTimeout(5000);
-
+    //Проверяем подсветку выключенных/включенных одиночных и nvr-камер в списке
     for (let camera of Configuration.cameras) {
         if (camera.isActivated) {
-            // await expect(page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true })).toHaveCSS("color", "rgb(250, 250, 250)");
             await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
         } else {
-            // await expect(page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true })).not.toHaveCSS("color", "rgb(250, 250, 250)");
             await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).not.toHaveCSS("color", "rgb(250, 250, 250)");
-            //включаем камеры обратно
+            //Включаем камеры обратно
             if (camera.isIpServer) {
                 await changeIPServerCameraActiveStatus(camera.videochannelID, true);
             } else {
@@ -312,7 +336,7 @@ test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
             }
         }
     };
-
+    //Проверяем что все камеры отображаются как включенные
     for (let camera of Configuration.cameras) {
         await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
     };
@@ -394,7 +418,7 @@ test('Sort by name (CLOUD-T133)', async ({ page }) => {
             name: `undefined`
         },
     ];
-
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
     for (let i = 0; i < Configuration.cameras.length; i++) {
         if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
             if (Configuration.cameras[i].isIpServer) {
