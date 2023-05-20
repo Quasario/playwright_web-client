@@ -9,6 +9,50 @@ import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
 import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, configurationCollector } from "../utils/utils.js";
 
+//Список названий/ID камер для поисковых тестов
+let testCameraNames = [
+    {
+        fullId: "100",
+        id: "100",
+        name: "Smith & Wesson"
+    },
+    {
+        fullId: "2",
+        id: "2",
+        name: "Device"
+    },
+    {
+        fullId: "A",
+        id: "A",
+        name: "Camera"
+    },
+    {
+        fullId: "4",
+        id: "4",
+        name: "221B Baker Street"
+    },
+    {
+        fullId: "5.11",
+        id: "11",
+        name: `!@#$%^&*()_+=?<'>""/|\\.,~:;`
+    },
+    {
+        fullId: "5.1",
+        id: "1",
+        name: `Кабинет 1-эт`
+    },
+    {
+        fullId: "5.5",
+        id: "5",
+        name: `Площадь`
+    },
+    {
+        fullId: "5.3",
+        id: "3",
+        name: `undefined`
+    },
+]
+
 let workerCount = 0;
 // let videoChannelList;
 let roleId = randomUUID();
@@ -376,48 +420,7 @@ test('Camera name change (CLOUD-T131)', async ({ page }) => {
 
 test('Sort by name (CLOUD-T133)', async ({ page }) => {
     // await page.pause();
-    let testCameraNames = [
-        {
-            fullId: "100",
-            id: "100",
-            name: "Smith & Wesson"
-        },
-        {
-            fullId: "2",
-            id: "2",
-            name: "Device"
-        },
-        {
-            fullId: "A",
-            id: "A",
-            name: "Camera"
-        },
-        {
-            fullId: "4",
-            id: "4",
-            name: "221B Baker Street"
-        },
-        {
-            fullId: "5.11",
-            id: "11",
-            name: `!@#$%^&*()_+=?<'>""/|\\.,~:;`
-        },
-        {
-            fullId: "5.1",
-            id: "1",
-            name: `Кабинет 1-эт`
-        },
-        {
-            fullId: "5.5",
-            id: "5",
-            name: `Площадь`
-        },
-        {
-            fullId: "5.3",
-            id: "3",
-            name: `undefined`
-        },
-    ];
+
     //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
     for (let i = 0; i < Configuration.cameras.length; i++) {
         if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
@@ -439,26 +442,484 @@ test('Sort by name (CLOUD-T133)', async ({ page }) => {
     await page.getByRole('button', { name: 'Hardware'}).click();
     await page.locator('[data-testid="at-sort-by-name"]').click();
     
-    await expect(page.locator('[draggable="true"]:nth-child(1)')).toHaveText('5.5.Площадь', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(2)')).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(3)')).toHaveText('5.3.undefined', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(4)')).toHaveText('100.Smith & Wesson', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(5)')).toHaveText('2.Device', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(6)')).toHaveText('A.Camera', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(7)')).toHaveText('4.221B Baker Street', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(8)')).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('5.5.Площадь', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(4)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(5)).toHaveText('A.Camera', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(6)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
 
     await page.locator('[data-testid="at-sort-by-name"]').click();
 
-    await expect(page.locator('[draggable="true"]:nth-child(1)')).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(2)')).toHaveText('4.221B Baker Street', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(3)')).toHaveText('A.Camera', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(4)')).toHaveText('2.Device', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(5)')).toHaveText('100.Smith & Wesson', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(6)')).toHaveText('5.3.undefined', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(7)')).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
-    await expect(page.locator('[draggable="true"]:nth-child(8)')).toHaveText('5.5.Площадь', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('A.Camera', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(4)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(5)).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(6)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('5.5.Площадь', { ignoreCase: false });
 });
+
+test('Sort by ID (CLOUD-T134)', async ({ page }) => {
+    // await page.pause();
+
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+    
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(4)).toHaveText('5.5.Площадь', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(5)).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(6)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+
+    await page.locator('[data-testid="at-sort-by-id"]').click();
+
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('A.Camera', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('5.5.Площадь', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(4)).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(5)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(6)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('2.Device', { ignoreCase: false });
+
+});
+
+test('Sort by favorite (CLOUD-T132)', async ({ page }) => {
+    // await page.pause();
+
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+    //Наводимся на камеру 2.Device и делаем ее избранной
+    await page.locator('[data-testid="at-camera-list-item"]').nth(0).hover();
+    await page.locator('.camera-list [type="checkbox"]').nth(0).click();
+    //Наводимся на камеру 5.3.undefined и делаем ее избранной
+    await page.locator('[data-testid="at-camera-list-item"]').nth(3).hover();
+    await page.locator('.camera-list [type="checkbox"]').nth(1).click();
+    //Наводимся на камеру A.Camera и делаем ее избранной
+    await page.locator('[data-testid="at-camera-list-item"]').nth(7).hover();
+    await page.locator('.camera-list [type="checkbox"]').nth(2).click();
+    //Сортируем по избранным
+    await page.locator('[data-testid="at-favorites-checkbox"]').click();
+    //Проверяем что в списке именно они
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('A.Camera', { ignoreCase: false });
+    //Убираем избранность с камеры 5.3.undefined
+    await page.locator('.camera-list [type="checkbox"]').nth(1).click();
+    //Проверяем что в списке две камеры
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('A.Camera', { ignoreCase: false });
+    //Убираем сорировку и проверяем название последней камеры
+    await page.locator('[data-testid="at-favorites-checkbox"]').click();
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+});
+
+test('Sort by imported list (CLOUD-T135)', async ({ page }) => {
+    // await page.pause();
+
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+    //Загружаем xlsx файл
+    await page.locator('#import-search-camlist-btn').setInputFiles('./test_data/example.xlsx');
+    //Проверяем коректность списка
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(1)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('5.3.undefined', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText(`5.11.!@#$%^&*()_+=?<'>""/|\\.,~:;`, { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(4)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    //Проверяем что чекбоксы камер в списке активны
+    for (let item of await page.locator('.camera-list [type="checkbox"]').all()) {
+        expect(item.isChecked());
+    }
+    //Убираем сорировку и проверяем название последней камеры
+    await page.locator('[data-testid="at-favorites-checkbox"]').click();
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+});
+
+test('Search by partial match (CLOUD-T136)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["1B", "e", "Street", "DEV", "ка"];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        if (input === "e") {
+            expect(camerasCount).toEqual(5);
+        } else {
+            expect(camerasCount).toEqual(1);
+        }   
+    }
+});
+
+test('Search by single ID (CLOUD-T137)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["4", "100", "100.", "5"];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        if (input === "5") {
+            expect(camerasCount).toEqual(4);
+        } else {
+            expect(camerasCount).toEqual(1);
+        }   
+    }
+});
+
+test('Search by double ID (CLOUD-T764)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["5.1", "5.3", "5.5.", "5.11."];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        if (input === "5.1") {
+            expect(camerasCount).toEqual(2);
+        } else {
+            expect(camerasCount).toEqual(1);
+        }   
+    }
+});
+
+test('Search by fullname, case sensitive (CLOUD-T762)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["221B Baker Street", "Device", "Кабинет 1-эт", "undefined"];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        expect(camerasCount).toEqual(1);
+    }
+});
+
+test('Search by fullname, case insensitive (CLOUD-T763)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["221b baker street", "DEVICE", "camera"];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        expect(camerasCount).toEqual(1);
+    }
+});
+
+test('Search by nonexistent camera (CLOUD-T139)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["200", "null", "nihill"];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        expect(camerasCount).toEqual(0);
+
+    }
+});
+
+test('Search by special symbols (CLOUD-T138)', async ({ page }) => {
+    test.skip();
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    let searchList = ["!", "@", "$", "%", "*", "^", "(", ")", "-", "_", "=", "?", "<", "'", ">", '"', "/", "|", "\\", ".", ",", "~", ":", ";", " ", "#", "+", "&"];
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+    for (let input of searchList) {
+        //Вписываем в поиск значение из тестового массива
+        await page.locator('input[type="search"]').fill(input);
+        //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+        await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+        await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+        //Считаем количество отображаемых камер в списке
+        let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+        //Провяем необходимое количество камер в результатах поиска
+        switch(input) {
+            case "&":
+                expect(camerasCount).toEqual(2);
+                break;
+            case " ":
+                expect(camerasCount).toEqual(3);
+                break;
+            case ".":
+                expect(camerasCount).toEqual(8);
+                break;
+            default:
+                expect(camerasCount).toEqual(1);
+
+        }
+    }
+});
+
+test('Camrera panel width saving after reload (CLOUD-T716)', async ({ page }) => {
+    // await page.pause();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.locator('.camera-list [role=none]').hover();
+    await page.mouse.down();
+    await page.mouse.move(400, 0);
+    await page.mouse.up();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.reload();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.waitForTimeout(1000);
+    //Берем размер панели из локалстораджа
+    let listWidth = await page.evaluate(() => window.localStorage.getItem('cameraList'));
+    //Сравниваем размер панели с тем что мы ранее двигали до 400px
+    expect(Number(listWidth) == 400).toBeTruthy();
+    //На всякий случай сравниваем реальный размер панели в UI с ожидаемым
+    let realWidth = await page.locator('.camera-list>div>div').boundingBox();
+    expect(Number(realWidth?.width) === 400).toBeTruthy();
+
+    await page.locator('.camera-list [role=none]').hover();
+    await page.mouse.down();
+    await page.mouse.move(250, 0);
+    await page.mouse.up();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.reload();
+    await page.getByRole('button', { name: 'Hardware' }).click();
+    await page.waitForTimeout(1000);
+    listWidth = await page.evaluate(() => window.localStorage.getItem('cameraList'));
+    realWidth = await page.locator('.camera-list>div>div').boundingBox();
+    expect(Number(realWidth?.width) == 250).toBeTruthy();
+    expect(Number(listWidth) == 250).toBeTruthy();
+});
+
 
 // test('Filter by imported file', async ({ page }) => {
 //     await page.goto(currentURL);
