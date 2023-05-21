@@ -1,6 +1,6 @@
 import { test, expect, } from '@playwright/test';
 import { currentURL, Configuration, hostName } from '../global_variables';
-import { createRole, setRolePermissions, deleteRoles } from '../grpc_api/roles';
+import { createRole, setRolePermissions, deleteRoles, setObjectPermissions } from '../grpc_api/roles';
 import { createUser, setUserPassword, assingUserRole, deleteUsers } from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createGroup, setGroup, addCameraToGroup } from '../grpc_api/groups';
@@ -917,6 +917,7 @@ test.only('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
     await addCameraToGroup(subfirst, Configuration.cameras[0].accessPoint);
     await addCameraToGroup(second, Configuration.cameras[1].accessPoint);
     console.log(Configuration);
+    await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[2].accessPoint, Configuration.cameras[3].accessPoint], "CAMERA_ACCESS_FORBID");
 
     await page.getByRole('button', { name: 'Hardware'}).click();
 
