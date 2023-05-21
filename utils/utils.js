@@ -1,10 +1,11 @@
 import { getCamerasEndpoints } from "../http_api/http_cameras";
-import { getLayoutList } from "../http_api/http_layouts"
-import { deleteCameras } from "../grpc_api/cameras"
-import { deleteLayouts } from "../grpc_api/layouts"
-import { getRolesAndUsers, deleteRoles } from "../grpc_api/roles"
-import { deleteUsers } from "../grpc_api/users"
-import { Configuration } from "../global_variables"
+import { getLayoutList } from "../http_api/http_layouts";
+import { deleteCameras } from "../grpc_api/cameras";
+import { deleteLayouts } from "../grpc_api/layouts";
+import { getRolesAndUsers, deleteRoles } from "../grpc_api/roles";
+import { deleteUsers } from "../grpc_api/users";
+import { Configuration } from "../global_variables";
+import { deleteGroup, getGroups } from "../grpc_api/groups"
 
 
 
@@ -119,6 +120,27 @@ export async function roleAnnihilator(roles = []) {
     
 };
 
+export async function groupAnnihilator(groups = []) {
+    let groupList;
+    
+    if (groups.length == 0){
+        groupList = await getGroups();
+    } else groupList = groups;
+    
+    let groupIDs = [];
+    for (let group of groupList) {
+        if (!groupIDs.includes(group?.group_id) && group.name != "Default") {
+            groupIDs.push(group.group_id);
+        }
+    }
+
+    // console.log(groupIDs);
+    if (groupIDs.length != 0) {
+        await deleteGroup(groupIDs);
+    }
+    
+};
+
 export async function configurationCollector(type = "all") {
     if (type == "all" || type  == "cameras") {
         let cameraList = await getCameraList();
@@ -146,6 +168,11 @@ export async function configurationCollector(type = "all") {
         Configuration.roles = roles;
 
     }
+
+    if (type == "all" || type == "groups") {
+        let groupList = await getGroups();
+        Configuration.groups = groupList;
+    } 
 }
 
 export function getIdByUserName(userName) {

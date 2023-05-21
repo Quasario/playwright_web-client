@@ -13,7 +13,8 @@ export let Configuration = {
     roles: Array(),
     users: Array(),
     archives: Array(),
-    layouts: Array()
+    layouts: Array(),
+    groups: Array()
 };
 
 export function setGlobalHostName(hosts) {

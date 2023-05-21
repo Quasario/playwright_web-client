@@ -1,13 +1,14 @@
-import { test, expect,} from '@playwright/test';
+import { test, expect, } from '@playwright/test';
 import { currentURL, Configuration, hostName } from '../global_variables';
-import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
-import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
+import { createRole, setRolePermissions, deleteRoles } from '../grpc_api/roles';
+import { createUser, setUserPassword, assingUserRole, deleteUsers } from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
+import { createGroup, setGroup, addCameraToGroup } from '../grpc_api/groups';
 import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveStatus, changeIPServerCameraActiveStatus, changeSingleCameraID, changeSingleCameraName, changeIPServerCameraID, changeIPServerCameraName} from '../grpc_api/cameras';
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, configurationCollector } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector } from "../utils/utils.js";
 
 //Список названий/ID камер для поисковых тестов
 let testCameraNames = [
@@ -92,29 +93,29 @@ let userWithoutWEB = {
 test.beforeAll(async () => {
     await getHostName();
     await configurationCollector();
-    await cameraAnnihilator();
-    await layoutAnnihilator();
-    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
-    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
-    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
-    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
-    await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
-    await createLayout(Configuration.cameras, 2, 2, "Test Layout");
-    await createRole("New_Role");
-    await setRolePermissions("New_Role");
-    await createUser("User_1");
-    await assingUserRole("New_Role", "User_1");
-    await setUserPassword("User_1", "123");
-    console.log(Configuration);
-    await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
-    await changeSingleCameraActiveStatus(Configuration.cameras[2].cameraBinding, false);
-    await changeIPServerCameraActiveStatus(Configuration.cameras[5].videochannelID, false);
-    await changeIPServerCameraActiveStatus(Configuration.cameras[6].videochannelID, false);
-    for (let camera of Configuration.cameras) {
-        if (camera.isIpServer){
-            await changeIPServerCameraName(camera.videochannelID, "Camera");
-        }
-    }
+//     await cameraAnnihilator();
+//     await layoutAnnihilator();
+//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
+//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
+//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
+//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
+//     await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
+//     await createLayout(Configuration.cameras, 2, 2, "Test Layout");
+//     await createRole("New_Role");
+//     await setRolePermissions("New_Role");
+//     await createUser("User_1");
+//     await assingUserRole("New_Role", "User_1");
+//     await setUserPassword("User_1", "123");
+//     console.log(Configuration);
+//     await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
+//     await changeSingleCameraActiveStatus(Configuration.cameras[2].cameraBinding, false);
+//     await changeIPServerCameraActiveStatus(Configuration.cameras[5].videochannelID, false);
+//     await changeIPServerCameraActiveStatus(Configuration.cameras[6].videochannelID, false);
+//     for (let camera of Configuration.cameras) {
+//         if (camera.isIpServer){
+//             await changeIPServerCameraName(camera.videochannelID, "Camera");
+//         }
+//     }
 });
   
 test.afterAll(async () => {
@@ -885,6 +886,49 @@ test('Search by special symbols (CLOUD-T138)', async ({ page }) => {
 
         }
     }
+});
+
+test.only('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    //Список значений для поиска
+    await groupAnnihilator();
+    let first = await createGroup("First");
+    let second = await createGroup("Second");
+    let subfirst = await createGroup("Subfirst", first);
+    console.log(Configuration);
+    await addCameraToGroup(subfirst, Configuration.cameras[0].accessPoint);
+    await addCameraToGroup(second, Configuration.cameras[1].accessPoint);
+    console.log(Configuration);
+
+    await page.getByRole('button', { name: 'Hardware'}).click();
+
+
+    // //Вписываем в поиск значение из тестового массива
+    // await page.locator('input[type="search"]').fill(input);
+    // //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+    // await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+    // await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+    // //Считаем количество отображаемых камер в списке
+    // let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
+    // //Провяем необходимое количество камер в результатах поиска
 });
 
 test('Camrera panel width saving after reload (CLOUD-T716)', async ({ page }) => {
