@@ -92,8 +92,6 @@ export async function setObjectPermissions(roleName, cameraIDs, accessLevel="CAM
         camerasObj[cameraID] = accessLevel;
     }
 
-    console.log(camerasObj);
-
     let body = {
         "method": "axxonsoft.bl.security.SecurityService.SetObjectPermissions",
         "data": {

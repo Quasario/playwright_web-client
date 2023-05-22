@@ -108,15 +108,19 @@ export async function deleteGroup(groupsID) {
     await configurationCollector("groups");
 };
 
-export async function addCameraToGroup(groupID, cameraID) {
-
+export async function addCameraToGroup(groupID, cameraIDs) {
+    let itemArr = [];
+    for(let cam of cameraIDs) {
+        itemArr.push({
+            "group_id": groupID,
+            "object": cam
+        });
+    };
+    console.log();
     let body = {
         "method": "axxonsoft.bl.groups.GroupManager.SetObjectsMembership",
         "data": {
-            "added_objects": {
-                "group_id": groupID,
-                "object": cameraID
-            }
+            "added_objects": itemArr
         }
     };
 
@@ -129,7 +133,7 @@ export async function addCameraToGroup(groupID, cameraID) {
     });
     
     if (request.ok) {
-        console.log(`Camera ${cameraID} was successfully added to group "${groupID}"!`.green);
-    } else console.log(`Error: could not add ${cameraID} to group "${groupID}". Code: ${request.status}`.red);
+        console.log(`Camera ${cameraIDs.toString()} was successfully added to group "${groupID}"!`.green);
+    } else console.log(`Error: could not add ${cameraIDs.toString()} to group "${groupID}". Code: ${request.status}`.red);
 
 };

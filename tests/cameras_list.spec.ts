@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator } from "../utils/utils.js";
 
 //Список названий/ID камер для поисковых тестов
 let testCameraNames = [
@@ -59,7 +59,7 @@ let workerCount = 0;
 let roleId = randomUUID();
 let userId = randomUUID();
 
-let userWithoutWEB = {
+let userWithoutGroupPanel = {
     "feature_access": [
         "FEATURE_ACCESS_DEVICES_SETUP",
         "FEATURE_ACCESS_ARCHIVES_SETUP",
@@ -67,6 +67,7 @@ let userWithoutWEB = {
         "FEATURE_ACCESS_SETTINGS_SETUP",
         "FEATURE_ACCESS_PROGRAMMING_SETUP",
         "FEATURE_ACCESS_REALTIME_RECOGNITION_SETUP",
+        "FEATURE_ACCESS_WEB_UI_LOGIN",
         "FEATURE_ACCESS_CHANGING_LAYOUTS",
         "FEATURE_ACCESS_EXPORT",
         "FEATURE_ACCESS_LAYOUTS_TAB",
@@ -84,7 +85,6 @@ let userWithoutWEB = {
         "FEATURE_ACCESS_ALLOW_SHOW_FACES_IN_LIVE",
         "FEATURE_ACCESS_ALLOW_UNPROTECTED_EXPORT",
         "FEATURE_ACCESS_IS_GUARD_ROLE",
-        "FEATURE_ACCESS_GROUP_PANEL",
         "FEATURE_ACCESS_OBJECT_PANEL_AND_CAMERA_SEARCH_PANEL",
         "FEATURE_ACCESS_CONFIDENTIAL_BOOKMARKS"
     ]
@@ -93,37 +93,38 @@ let userWithoutWEB = {
 test.beforeAll(async () => {
     await getHostName();
     await configurationCollector();
-//     await cameraAnnihilator();
-//     await layoutAnnihilator();
-//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
-//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
-//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
-//     await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
-//     await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
-//     await createLayout(Configuration.cameras, 2, 2, "Test Layout");
-//     await createRole("New_Role");
-//     await setRolePermissions("New_Role");
-//     await createUser("User_1");
-//     await assingUserRole("New_Role", "User_1");
-//     await setUserPassword("User_1", "123");
-//     console.log(Configuration);
-//     await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
-//     await changeSingleCameraActiveStatus(Configuration.cameras[2].cameraBinding, false);
-//     await changeIPServerCameraActiveStatus(Configuration.cameras[5].videochannelID, false);
-//     await changeIPServerCameraActiveStatus(Configuration.cameras[6].videochannelID, false);
-//     for (let camera of Configuration.cameras) {
-//         if (camera.isIpServer){
-//             await changeIPServerCameraName(camera.videochannelID, "Camera");
-//         }
-//     }
+    await cameraAnnihilator();
+    await layoutAnnihilator();
+    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
+    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
+    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
+    await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
+    await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
+    await createLayout(Configuration.cameras, 2, 2, "Test Layout");
+    await createRole("New_Role");
+    await setRolePermissions("New_Role");
+    await createUser("User_1");
+    await assingUserRole("New_Role", "User_1");
+    await setUserPassword("User_1", "123");
+    console.log(Configuration);
+    await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
+    await changeSingleCameraActiveStatus(Configuration.cameras[2].cameraBinding, false);
+    await changeIPServerCameraActiveStatus(Configuration.cameras[5].videochannelID, false);
+    await changeIPServerCameraActiveStatus(Configuration.cameras[6].videochannelID, false);
+    for (let camera of Configuration.cameras) {
+        if (camera.isIpServer){
+            await changeIPServerCameraName(camera.videochannelID, "Camera");
+        }
+    }
 });
   
 test.afterAll(async () => {
-//     console.log(createdUnits);
-//     await deleteRoles(createdUnits.roles);
-//     await deleteUsers(createdUnits.users);
-//     await deleteCameras(createdUnits.cameras);
-//     await deleteLayouts(createdUnits.layouts);
+    await cameraAnnihilator();
+    await layoutAnnihilator();
+    await layoutAnnihilator();
+    await groupAnnihilator();
+    await roleAnnihilator();
+    await userAnnihilator();
 });
 
 test.beforeEach(async ({ page }) => {
@@ -888,7 +889,7 @@ test('Search by special symbols (CLOUD-T138)', async ({ page }) => {
     }
 });
 
-test.only('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
+test('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
     // await page.pause();
     
     //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
@@ -908,28 +909,130 @@ test.only('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
             }
         }
     }
-    //Список значений для поиска
+
     await groupAnnihilator();
     let first = await createGroup("First");
     let second = await createGroup("Second");
     let subfirst = await createGroup("Subfirst", first);
-    console.log(Configuration);
-    await addCameraToGroup(subfirst, Configuration.cameras[0].accessPoint);
-    await addCameraToGroup(second, Configuration.cameras[1].accessPoint);
-    console.log(Configuration);
-    await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[2].accessPoint, Configuration.cameras[3].accessPoint], "CAMERA_ACCESS_FORBID");
+
+    await addCameraToGroup(first, [Configuration.cameras[0].accessPoint, Configuration.cameras[3].accessPoint, Configuration.cameras[7].accessPoint, Configuration.cameras[5].accessPoint,]);
+    await addCameraToGroup(subfirst, [Configuration.cameras[0].accessPoint, Configuration.cameras[5].accessPoint, Configuration.cameras[6].accessPoint,]);
+    await addCameraToGroup(second, [Configuration.cameras[1].accessPoint, Configuration.cameras[2].accessPoint, Configuration.cameras[4].accessPoint,]);
+
+    const responsePromise = page.waitForResponse(request => request.url().includes(`${currentURL}/group`));
+    await page.reload();
+    await responsePromise;
+    //await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[6].accessPoint, Configuration.cameras[7].accessPoint], "CAMERA_ACCESS_FORBID");
 
     await page.getByRole('button', { name: 'Hardware'}).click();
+    await expect(page.locator('[id="at-groups-list"]')).toHaveText('Default', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(8);
+    
+    await page.locator('[id="at-groups-list"]').click();
+    await page.getByRole('button', { name: "First", exact: true }).click();
+    await expect(page.locator('[id="at-groups-list"]')).toHaveText('First', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(4);
 
+    await page.locator('[id="at-groups-list"]').click();
+    await page.getByRole('button', { name: "Second", exact: true }).click();
+    await expect(page.locator('[id="at-groups-list"]')).toHaveText('Second', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('A.Camera', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(3);
 
-    // //Вписываем в поиск значение из тестового массива
-    // await page.locator('input[type="search"]').fill(input);
-    // //Ждем пока элемент загрузки списка появится и исчезнет из DOM
-    // await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
-    // await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
-    // //Считаем количество отображаемых камер в списке
-    // let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
-    // //Провяем необходимое количество камер в результатах поиска
+    await page.locator('[id="at-groups-list"]').click();
+    await page.getByRole('button', { name: "First > Subfirst", exact: true }).click();
+    await expect(page.locator('[id="at-groups-list"]')).toHaveText('Subfirst', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(2)).toHaveText('100.Smith & Wesson', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(3);
+
+    await page.locator('[id="at-groups-list"]').click();
+    await page.getByRole('button', { name: "Default", exact: true }).click();
+    await expect(page.locator('[id="at-groups-list"]')).toHaveText('Default', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(8);
+
+});
+
+test('Access to group panel check (CLOUD-T503)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+
+    if (Configuration.groups.length == 0) {
+        let extra = await createGroup("Extra");
+        await addCameraToGroup(extra, [Configuration.cameras[0].accessPoint, Configuration.cameras[3].accessPoint,]);
+    }
+
+    await setRolePermissions("New_Role", userWithoutGroupPanel);
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Change user' }).click();
+    await page.getByLabel('Login').fill('User_1');
+    await page.getByLabel('Password').fill('123');
+    await page.getByLabel('Password').press('Enter');
+
+    await expect(page.locator('[id="at-groups-list"]')).toBeHidden();
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(8);
+});
+
+test('Access to cameras (CLOUD-T141)', async ({ page }) => {
+    // await page.pause();
+    
+    //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
+    for (let i = 0; i < Configuration.cameras.length; i++) {
+        if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraID(Configuration.cameras[i].videochannelID, testCameraNames[i].id);
+            } else {
+                await changeSingleCameraID(Configuration.cameras[i].cameraBinding, testCameraNames[i].id);
+            }
+        }
+        if (Configuration.cameras[i].displayName != testCameraNames[i].name) {
+            if (Configuration.cameras[i].isIpServer) {
+                await changeIPServerCameraName(Configuration.cameras[i].videochannelID, testCameraNames[i].name);
+            } else {
+                await changeSingleCameraName(Configuration.cameras[i].cameraBinding, testCameraNames[i].name);
+            }
+        }
+    }
+    
+    await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[6].accessPoint, Configuration.cameras[7].accessPoint], "CAMERA_ACCESS_FORBID");
+
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Change user' }).click();
+    await page.getByLabel('Login').fill('User_1');
+    await page.getByLabel('Password').fill('123');
+    await page.getByLabel('Password').press('Enter');
+    
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('4.221B Baker Street', { ignoreCase: false });
+    await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('A.Camera', { ignoreCase: false });
+    expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(4);
+
 });
 
 test('Camrera panel width saving after reload (CLOUD-T716)', async ({ page }) => {
