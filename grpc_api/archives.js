@@ -54,7 +54,6 @@ export async function createArchive(archiveName='White') {
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        createdUnits.archives.push(response.added[0]);
         console.log(`Archive(${archiveName}) was successfully created!`.green);
     }else console.log(`Error: Archive was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     
@@ -113,14 +112,14 @@ export async function createArchiveVolume(archiveName='White', fileSize=10) {
     
 };
 
-export async function deleteArchive(archiveReference) {
+export async function deleteArchive(archiveName) {
 
     let body = {
         "method":"axxonsoft.bl.config.ConfigurationService.ChangeConfig",
         "data":{
             "removed":[
                 {
-                "uid": archiveReference,
+                "uid": `hosts/${hostName}/MultimediaStorage.${archiveName}`, //hosts/Server1/MultimediaStorage.Aqua
                 "type": "MultimediaStorage",
                 "properties": [],
                 "units": [],
@@ -137,10 +136,99 @@ export async function deleteArchive(archiveReference) {
         body: JSON.stringify(body)
     });
 
+    let response = await request.json();
+
     if (request.ok && !response.failed.length) {
-        createdUnits.archives = []; //clear array from deleted items
-        console.log(`Archive (${archiveReference}) was successfully deleted!`.green);
-    }else console.log(`Error: Archive (${archiveReference}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Archive (${archiveName}) was successfully deleted!`.green);
+    }else console.log(`Error: Archive (${archiveName}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
+};
+
+export async function getArchiveList() {
+
+    let body = {
+        "method":"axxonsoft.bl.config.ConfigurationService.ListUnits",
+        "data":{
+            "unit_uids": [`hosts/${hostName}`]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+
+    let response = await request.json();
+
+    if (request.ok) {
+        let output = [];
+        for (let unit of response.units[0].units) {
+            if (unit.type == "MultimediaStorage") {
+                output.push(unit);
+            }
+        }
+        console.log(output);
+        return output;
+    } else console.log(`Error: Coudn't pull archive list. Code: ${request.status}, Failed: ${response.failed}`.red);
+};
+
+export async function createArchiveContext(archiveName, cameraEndpoints, isConstantRec=true) {
+    let unitsList = [];
+    for (let camera of cameraEndpoints) {
+        unitsList.push({
+                    "type": "ArchiveContext",
+                    "properties": [
+                        {
+                            "id": "camera_ref",
+                            "value_string": camera
+                        },
+                        {
+                            "id": "constant_recording",
+                            "value_bool": isConstantRec
+                        },
+                        {
+                            "id": "prerecord_sec",
+                            "value_int32": 0
+                        },
+                        {
+                            "id": "day_depth",
+                            "value_int32": 0
+                        },
+                        {
+                            "id": "specific_fps",
+                            "value_double": 0
+                        }
+                    ]
+                })
+    };
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "added": [
+                {
+                    "uid": `hosts/${hostName}/MultimediaStorage.${archiveName}`,
+                    "units": unitsList
+                }
+            ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Archive context was created for cameras ([${cameraEndpoints.toString()}])!`.green);
+    }else console.log(`Error: Coudn't created archive context for cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
 

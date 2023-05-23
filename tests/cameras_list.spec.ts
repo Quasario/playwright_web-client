@@ -142,7 +142,7 @@ test.beforeEach(async ({ page }) => {
 
 test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
     // await page.pause();
-    //Авторизация к юзеру без раскладок
+    //Авторизация юзером без раскладок
     await page.locator('#at-top-menu-btn').click();
     await page.getByRole('menuitem', { name: 'Change user' }).click();
     await page.getByLabel('Login').fill('User_1');
@@ -190,7 +190,7 @@ test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
 });
 
 
-test('Change width camera list (CLOUD-T122)', async ({ page }) => {
+test('Change camera list width (CLOUD-T122)', async ({ page }) => {
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware' }).click();
     await page.locator('.camera-list [role=none]').hover();
@@ -1067,17 +1067,3 @@ test('Camrera panel width saving after reload (CLOUD-T716)', async ({ page }) =>
     expect(Number(realWidth?.width) == 250).toBeTruthy();
     expect(Number(listWidth) == 250).toBeTruthy();
 });
-
-
-// test('Filter by imported file', async ({ page }) => {
-//     await page.goto(currentURL);
-//     await page.pause();
-//     await page.getByLabel('Login').fill('root');
-//     await page.getByLabel('Password').fill('root');
-//     await page.getByLabel('Login').press('Enter');
-//     await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
-//     await page.locator('#import-search-camlist-btn').setInputFiles('./test_data/example.xlsx');
-//     await expect(page.getByRole('button', { name: '108.Camera' })).toBeHidden();
-//     await expect(page.getByRole('button', { name: '109.Camera' })).toBeVisible();
-//     await expect(page.getByRole('button', { name: '110.Camera' })).toBeHidden();
-// });

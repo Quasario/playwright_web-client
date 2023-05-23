@@ -61,7 +61,7 @@ test.afterAll(async () => {
     console.log(Configuration.roles);
     await roleAnnihilator();
     await userAnnihilator();
-    await cameraAnnihilator([Configuration.cameras[0], Configuration.cameras[1]]);
+    await cameraAnnihilator();
     exchangeIndexCredentials("", "");
 });
 

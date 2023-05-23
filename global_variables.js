@@ -5,7 +5,7 @@ export let currentURL = "http://192.168.0.23";
 export let isLocalMachine = false; //если тесты и сервер находятся на одной машине - true
 export let hostName;
 export let videoFolder = 'C:/demovideo';
-export let archiveDirection = 'C:/arch';
+export let archiveDirection = 'C:/';
 
 
 export let Configuration = {
