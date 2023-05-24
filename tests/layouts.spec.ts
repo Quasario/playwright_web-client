@@ -1,7 +1,7 @@
 import { test, expect, } from '@playwright/test';
 import { currentURL, Configuration, hostName } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles, setObjectPermissions } from '../grpc_api/roles';
-import { createUser, setUserPassword, assingUserRole, deleteUsers } from '../grpc_api/users';
+import { createUser, setUserPassword, assignUserRole, deleteUsers } from '../grpc_api/users';
 import { createArchive, createArchiveVolume, createArchiveContext, deleteArchive, getArchiveList } from '../grpc_api/archives';
 import { createGroup, setGroup, addCameraToGroup } from '../grpc_api/groups';
 import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveStatus, changeIPServerCameraActiveStatus, changeSingleCameraID, changeSingleCameraName, changeIPServerCameraID, changeIPServerCameraName} from '../grpc_api/cameras';
@@ -109,7 +109,7 @@ test.beforeAll(async () => {
     // await createRole("New_Role");
     // await setRolePermissions("New_Role");
     // await createUser("User_1");
-    // await assingUserRole("New_Role", "User_1");
+    // await assignUserRole("New_Role", "User_1");
     // await setUserPassword("User_1", "123");
     // console.log(Configuration);
     // await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");

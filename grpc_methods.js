@@ -185,7 +185,7 @@ export async function setUserPassword(currentUserId, password="123") {
     
 }
 
-export async function assingUserRole(currentRoleId, currentUserId) {
+export async function assignUserRole(currentRoleId, currentUserId) {
     let body = {
         "method": "axxonsoft.bl.security.SecurityService.ChangeConfig",
         "data": {

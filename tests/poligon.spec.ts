@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { currentURL } from '../global_variables';
 import { createRole, setRolePermissions, } from '../methods/roles';
-import { createUser, setUserPassword, assingUserRole, } from '../methods/users';
+import { createUser, setUserPassword, assignUserRole, } from '../methods/users';
 import { createArchive, createArchiveVolume, } from '../methods/archives';
 import { createCamera, } from '../methods/cameras';
-// import { createRole, setRolePermissions, createUser, setUserPassword, assingUserRole, createArchive, createArchiveVolume } from '../grpc_methods';
+// import { createRole, setRolePermissions, createUser, setUserPassword, assignUserRole, createArchive, createArchiveVolume } from '../grpc_methods';
 
 
 test('test', async ({ page }) => {
@@ -14,7 +14,7 @@ test('test', async ({ page }) => {
   // await setRolePermissions(roleId);
   // await createUser(userId);
   // await setUserPassword(userId, '1');
-  // await assingUserRole(roleId, userId);
+  // await assignUserRole(roleId, userId);
   // await createArchive();
   // await createArchiveVolume();
   await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");

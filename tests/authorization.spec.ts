@@ -1,7 +1,7 @@
 import { test, expect, } from '@playwright/test';
 import { currentURL, Configuration, hostName, isLocalMachine } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
-import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
+import { createUser, setUserPassword, assignUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
 import { exchangeIndexCredentials } from '../utils/fs.mjs';
@@ -50,7 +50,7 @@ test.beforeAll(async () => {
     await createRole(role);
     await setRolePermissions(role);
     await createUser(user);
-    await assingUserRole(role, user);
+    await assignUserRole(role, user);
     await configurationCollector();
     console.log(Configuration.users);
     console.log(Configuration.roles);

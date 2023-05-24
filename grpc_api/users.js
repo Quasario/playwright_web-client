@@ -66,7 +66,7 @@ export async function setUserPassword(userName, password="123") {
     
 }
 
-export async function assingUserRole(roleName, userName) {
+export async function assignUserRole(roleName, userName) {
     let body = {
         "method": "axxonsoft.bl.security.SecurityService.ChangeConfig",
         "data": {

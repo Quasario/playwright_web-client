@@ -1,7 +1,7 @@
 import { test, expect, } from '@playwright/test';
 import { currentURL, createdUnits, hostName, isLocalMachine } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles} from '../grpc_api/roles';
-import { createUser, setUserPassword, assingUserRole, deleteUsers} from '../grpc_api/users';
+import { createUser, setUserPassword, assignUserRole, deleteUsers} from '../grpc_api/users';
 import { createArchive, createArchiveVolume, } from '../grpc_api/archives';
 import { createCamera, deleteCameras} from '../grpc_api/cameras';
 import { exchangeIndexCredentials } from '../utils/fs.mjs';
