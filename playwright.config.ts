@@ -36,6 +36,7 @@ export default defineConfig({
     // launchOptions: {
     //   slowMo: 200,
     // },
+    locale: "en",
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     navigationTimeout: 0,

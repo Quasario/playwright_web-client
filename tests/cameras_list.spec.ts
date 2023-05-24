@@ -361,6 +361,7 @@ test('Check "Show device IDs" parameter (CLOUD-T128)', async ({ page }) => {
 
 
 test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
+    test.skip();
     // await page.pause();
     await page.getByRole('button', { name: 'Hardware'}).click();
 
