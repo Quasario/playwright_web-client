@@ -54,11 +54,6 @@ let testCameraNames = [
     },
 ]
 
-let workerCount = 0;
-// let videoChannelList;
-let roleId = randomUUID();
-let userId = randomUUID();
-
 let userWithoutGroupPanel = {
     "feature_access": [
         "FEATURE_ACCESS_DEVICES_SETUP",

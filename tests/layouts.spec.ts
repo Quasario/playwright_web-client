@@ -10,54 +10,8 @@ import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
 import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator } from "../utils/utils.js";
 
-//Список названий/ID камер для поисковых тестов
-let testCameraNames = [
-    {
-        fullId: "100",
-        id: "100",
-        name: "Smith & Wesson"
-    },
-    {
-        fullId: "2",
-        id: "2",
-        name: "Device"
-    },
-    {
-        fullId: "A",
-        id: "A",
-        name: "Camera"
-    },
-    {
-        fullId: "4",
-        id: "4",
-        name: "221B Baker Street"
-    },
-    {
-        fullId: "5.11",
-        id: "11",
-        name: `!@#$%^&*()_+=?<'>""/|\\.,~:;`
-    },
-    {
-        fullId: "5.1",
-        id: "1",
-        name: `Кабинет 1-эт`
-    },
-    {
-        fullId: "5.5",
-        id: "5",
-        name: `Площадь`
-    },
-    {
-        fullId: "5.3",
-        id: "3",
-        name: `undefined`
-    },
-]
-
-let workerCount = 0;
-// let videoChannelList;
-let roleId = randomUUID();
-let userId = randomUUID();
+//Список названий/ID камер в конфигурации
+let cameras: any;
 
 let userWithoutGroupPanel = {
     "feature_access": [
@@ -93,18 +47,24 @@ let userWithoutGroupPanel = {
 test.beforeAll(async () => {
     await getHostName();
     await configurationCollector();
-    await getArchiveList();
+    // await getArchiveList();
     // await deleteArchive('Black');
     // await cameraAnnihilator();
     // await layoutAnnihilator();
-    // await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
-    // await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
-    // await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
-    // await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
-    // await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
+    // await createCamera(8, "AxxonSoft", "Virtual several streams", "admin", "admin", "0.0.0.0", "80", "", "Camera");
+    // await createCamera(2, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "", "Camera");
+    // await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
     // await createArchive("Black");
     // await createArchiveVolume("Black", 20);
-    // await createArchiveContext("Black", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[6].accessPoint, Configuration.cameras[7].accessPoint,]);
+    // let cameraEndpoints = Configuration.cameras.map(item => item.accessPoint);
+    // await createArchiveContext("Black", cameraEndpoints, false);
+    cameras = Configuration.cameras.map(item => { return ({
+        id: item.displayId,
+        name: item.displayName  
+    })})
+
+    console.log(cameras);
+
     // await createLayout(Configuration.cameras, 2, 2, "Test Layout");
     // await createRole("New_Role");
     // await setRolePermissions("New_Role");
@@ -133,18 +93,28 @@ test.beforeAll(async () => {
 // });
 
 test.beforeEach(async ({ page }) => {
-    // await page.goto(currentURL);
-    // await page.getByLabel('Login').fill('root');
-    // await page.getByLabel('Password').fill('root');
-    // await page.getByLabel('Password').press('Enter');
+    await layoutAnnihilator();
+    await page.goto(currentURL);
+    await page.getByLabel('Login').fill('root');
+    await page.getByLabel('Password').fill('root');
+    await page.getByLabel('Password').press('Enter');
 });
 
 
 test('Creation of x1 layout (CLOUD-T229)', async ({ page }) => {
     // await page.pause();
-    await page.goto(currentURL);
-    //Авторизация к юзеру без раскладок
-    // await page.locator('#at-top-menu-btn').click();
+
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="1\u00D71"]').click();
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    console.log(requestPromise);
+    await expect (page.locator('#at-layout-item-0')).toHaveText(`New Layout`);
+    
+    
+
     // await page.getByRole('menuitem', { name: 'Change user' }).click();
     // await page.getByLabel('Login').fill('User_1');
     // await page.getByLabel('Password').fill('123');

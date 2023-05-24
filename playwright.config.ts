@@ -34,7 +34,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     // launchOptions: {
-    //   slowMo: 200,
+    //   slowMo: 500,
     // },
     locale: "en",
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
