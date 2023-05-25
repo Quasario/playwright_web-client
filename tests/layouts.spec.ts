@@ -111,30 +111,120 @@ test('Creation of x1 layout (CLOUD-T229)', async ({ page }) => {
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
     console.log(requestPromise);
-    await expect (page.locator('#at-layout-item-0')).toHaveText(`New Layout`);
-    
-    
-
-    // await page.getByRole('menuitem', { name: 'Change user' }).click();
-    // await page.getByLabel('Login').fill('User_1');
-    // await page.getByLabel('Password').fill('123');
-    // await page.getByLabel('Password').press('Enter');
-    // //Проверяем что камеры на месте
-    // await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '2.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '3.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '4.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '5.0.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '5.1.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '5.2.Camera', exact: true })).toBeVisible();
-    // await expect(page.getByRole('button', { name: '5.3.Camera', exact: true })).toBeVisible();
-    // //Проверяем цвета камер в списке, чтобы включенные камеры были белыми, а выключенные нет
-    // await expect(page.locator("xpath=//*/p/span[text()='1.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
-    // await expect(page.locator("xpath=//*/p/span[text()='3.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
-    // await expect(page.locator("xpath=//*/p/span[text()='5.0.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
-    // await expect(page.locator("xpath=//*/p/span[text()='5.1.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
-    // await expect(page.locator("xpath=//*/p/span[text()='5.2.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(1);
+    await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
 });
 
 
+test('Creation of x4 layout (CLOUD-T230)', async ({ page }) => {
+    // await page.pause();
+
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="2\u00D72"]').click();
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(1)).toHaveText(`${cameras[1].id}.${cameras[1].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(2)).toHaveText(`${cameras[2].id}.${cameras[2].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(3)).toHaveText(`${cameras[3].id}.${cameras[3].name}`);
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    console.log(requestPromise);
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+    await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(1)).toHaveText(`${cameras[1].id}.${cameras[1].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(2)).toHaveText(`${cameras[2].id}.${cameras[2].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(3)).toHaveText(`${cameras[3].id}.${cameras[3].name}`);
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(1)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(2)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(3)).toContainText("Auto");
+});
+
+
+test('Creation of x9 layout (CLOUD-T231)', async ({ page }) => {
+    // await page.pause();
+
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="3\u00D73"]').click();
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(4)).toHaveText(`${cameras[4].id}.${cameras[4].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(8)).toHaveText(`${cameras[8].id}.${cameras[8].name}`);
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    console.log(requestPromise);
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(9);
+    await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(4)).toHaveText(`${cameras[4].id}.${cameras[4].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(8)).toHaveText(`${cameras[8].id}.${cameras[8].name}`);
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(4)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(8)).toContainText("Auto");
+});
+
+
+test('Creation of x16 layout (CLOUD-T232)', async ({ page }) => {
+    // await page.pause();
+
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="4\u00D74"]').click();
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(5)).toHaveText(`${cameras[5].id}.${cameras[5].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(10)).toHaveText(`${cameras[10].id}.${cameras[10].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(15)).toHaveText(`${cameras[15].id}.${cameras[15].name}`);
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    console.log(requestPromise);
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(16);
+    await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(5)).toHaveText(`${cameras[5].id}.${cameras[5].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(10)).toHaveText(`${cameras[10].id}.${cameras[10].name}`);
+    await expect (page.locator('[data-testid="at-camera-title"]').nth(15)).toHaveText(`${cameras[15].id}.${cameras[15].name}`);
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(5)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(10)).toContainText("Auto");
+    await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(15)).toContainText("Auto");
+});
+
+
+test('Cells size changing (CLOUD-T233)', async ({ page }) => {
+    // await page.pause();
+
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="3\u00D73"]').click();
+    await page.locator('[role="gridcell"][tabindex="0"]').hover();
+    await page.locator('[role="gridcell"][tabindex="0"] [role="group"]:nth-child(3) button:nth-child(1)').click(); // СДЕЛАТЬ ЛОКАТОРЫ
+    //Ячейка 2 исчезла
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toBeHidden();
+
+    await page.locator('[role="gridcell"][tabindex="0"] [role="group"]:nth-child(4) button:nth-child(1)').click();
+    //Ячейки 4 и 5 исчезли
+    await expect (page.locator('[role="gridcell"][tabindex="3"]')).toBeHidden();
+    await expect (page.locator('[role="gridcell"][tabindex="4"]')).toBeHidden();
+
+    await page.locator('[role="gridcell"][tabindex="8"]').hover();
+    await page.locator('[role="gridcell"][tabindex="8"] [role="group"]:nth-child(2) button:nth-child(1)').click();
+    //Ячейка 6 исчезла
+    await expect (page.locator('[role="gridcell"][tabindex="5"]')).toBeHidden();
+
+    await page.locator('[role="gridcell"][tabindex="7"]').hover();
+    await page.locator('[role="gridcell"][tabindex="7"] [role="group"]:nth-child(1) button:nth-child(1)').click();
+    //Ячейка 7 исчезла
+    await expect (page.locator('[role="gridcell"][tabindex="6"]')).toBeHidden();
+    await page.locator('[role="gridcell"][tabindex="7"] [role="group"]:nth-child(1) button:nth-child(2)').click();
+    await expect (page.getByText("Drag camera here")).toBeVisible();
+
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    console.log(requestPromise);
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+
+});
 
