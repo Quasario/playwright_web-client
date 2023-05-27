@@ -39,7 +39,7 @@ export async function createUser(userName='User') {
 }
 
 export async function setUserPassword(userName, password="123") {
-    console.log(getIdByUserName(userName))
+
     let body = {
         "method": "axxonsoft.bl.security.SecurityService.ChangeConfig",
         "data": {

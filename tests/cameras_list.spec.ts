@@ -16,8 +16,10 @@ test.describe("Common block", () => {
     test.beforeAll(async () => {
         await getHostName();
         await configurationCollector();
-        await cameraAnnihilator();
-        await layoutAnnihilator();
+        await cameraAnnihilator(Configuration.cameras);
+        await layoutAnnihilator(Configuration.layouts);
+        await roleAnnihilator(Configuration.roles);
+        await userAnnihilator(Configuration.users);
         await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
         await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
         await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
@@ -372,6 +374,9 @@ test.describe("Common block", () => {
 
 
 test.describe("Searching block", () => {
+    //флаг, чтобы блок after all не вызывался после каждого падения, а только после последнего теста
+    let lastTest = false;
+
     let testCameraNames = [
         {
             fullId: "100",
@@ -447,6 +452,8 @@ test.describe("Searching block", () => {
     }
 
     test.beforeAll(async () => {
+        await getHostName();
+        await configurationCollector();
         //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
         for (let i = 0; i < Configuration.cameras.length; i++) {
             if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
@@ -467,12 +474,13 @@ test.describe("Searching block", () => {
     });
       
     test.afterAll(async () => {
-        await cameraAnnihilator();
-        await layoutAnnihilator();
-        await layoutAnnihilator();
-        await groupAnnihilator();
-        await roleAnnihilator();
-        await userAnnihilator();
+        if (lastTest) {
+            await cameraAnnihilator();
+            await layoutAnnihilator();
+            await groupAnnihilator();
+            await roleAnnihilator();
+            await userAnnihilator();
+        }
     });
 
     test.beforeEach(async ({ page }) => {
@@ -840,7 +848,7 @@ test.describe("Searching block", () => {
     
     test('Access to cameras (CLOUD-T141)', async ({ page }) => {
         // await page.pause();
-        
+        lastTest = true;
         await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[6].accessPoint, Configuration.cameras[7].accessPoint], "CAMERA_ACCESS_FORBID");
     
         await page.locator('#at-top-menu-btn').click();

@@ -82,11 +82,12 @@ export async function userAnnihilator(users = []) {
     let userList;
     
     if (users.length == 0){
-        userList = await getRolesAndUsers();
+        let rolesAndUsers = await getRolesAndUsers();
+        userList = rolesAndUsers.users;
     } else userList = users;
     
     let userIDs = [];
-    for (let user of userList.users) {
+    for (let user of userList) {
         if (!userIDs.includes(user?.index) && user.name != "root") {
             userIDs.push(user.index);
         }
@@ -103,11 +104,12 @@ export async function roleAnnihilator(roles = []) {
     let roleList;
     
     if (roles.length == 0){
-        roleList = await getRolesAndUsers();
+        let rolesAndUsers = await getRolesAndUsers();
+        roleList = rolesAndUsers.roles;
     } else roleList = roles;
     
     let roleIDs = [];
-    for (let role of roleList.roles) {
+    for (let role of roleList) {
         if (!roleIDs.includes(role?.index) && role.name != "admin") {
             roleIDs.push(role.index);
         }
