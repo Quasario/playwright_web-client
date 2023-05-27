@@ -93,7 +93,7 @@ test.beforeAll(async () => {
 // });
 
 test.beforeEach(async ({ page }) => {
-    // await layoutAnnihilator();
+    await layoutAnnihilator();
     await page.goto(currentURL);
     await page.getByLabel('Login').fill('root');
     await page.getByLabel('Password').fill('root');
@@ -106,13 +106,17 @@ test('Creation of x1 layout (CLOUD-T229)', async ({ page }) => {
 
     await page.locator('#at-layout-menu').click();
     await page.locator('[title="1\u00D71"]').click();
+    //Проверяем, что ячейка содержит нужную камеру
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
-
+    //Проверяем количество ячеек в созданной раскладке
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(1);
+    //Проверяем имя созданной раскладки
     await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    //Проверяем название и разрешение камеры
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
 });
@@ -123,16 +127,20 @@ test('Creation of x4 layout (CLOUD-T230)', async ({ page }) => {
 
     await page.locator('#at-layout-menu').click();
     await page.locator('[title="2\u00D72"]').click();
+    //Проверяем, что ячейки содержат нужные камеры
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(1)).toHaveText(`${cameras[1].id}.${cameras[1].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(2)).toHaveText(`${cameras[2].id}.${cameras[2].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(3)).toHaveText(`${cameras[3].id}.${cameras[3].name}`);
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
-
+    //Проверяем количество ячеек в созданной раскладке
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+    //Проверяем имя созданной раскладки
     await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    //Проверяем названия и разрешения камер
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(1)).toHaveText(`${cameras[1].id}.${cameras[1].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(2)).toHaveText(`${cameras[2].id}.${cameras[2].name}`);
@@ -149,15 +157,19 @@ test('Creation of x9 layout (CLOUD-T231)', async ({ page }) => {
 
     await page.locator('#at-layout-menu').click();
     await page.locator('[title="3\u00D73"]').click();
+    //Проверяем, что ячейки по диагонали содержат нужные камеры
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(4)).toHaveText(`${cameras[4].id}.${cameras[4].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(8)).toHaveText(`${cameras[8].id}.${cameras[8].name}`);
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
-
+    //Проверяем количество ячеек в созданной раскладке
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(9);
+    //Проверяем имя созданной раскладки
     await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    //Проверяем названия и разрешения камер по диагонали
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(4)).toHaveText(`${cameras[4].id}.${cameras[4].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(8)).toHaveText(`${cameras[8].id}.${cameras[8].name}`);
@@ -172,16 +184,20 @@ test('Creation of x16 layout (CLOUD-T232)', async ({ page }) => {
 
     await page.locator('#at-layout-menu').click();
     await page.locator('[title="4\u00D74"]').click();
+    //Проверяем, что ячейки по диагонали содержат нужные камеры
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(5)).toHaveText(`${cameras[5].id}.${cameras[5].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(10)).toHaveText(`${cameras[10].id}.${cameras[10].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(15)).toHaveText(`${cameras[15].id}.${cameras[15].name}`);
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
-
+    //Проверяем количество ячеек в созданной раскладке
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(16);
+    //Проверяем имя созданной раскладки
     await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+    //Проверяем названия и разрешения камер по диагонали
     await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(5)).toHaveText(`${cameras[5].id}.${cameras[5].name}`);
     await expect (page.locator('[data-testid="at-camera-title"]').nth(10)).toHaveText(`${cameras[10].id}.${cameras[10].name}`);
@@ -198,34 +214,35 @@ test('Cells size changing (CLOUD-T233)', async ({ page }) => {
 
     await page.locator('#at-layout-menu').click();
     await page.locator('[title="3\u00D73"]').click();
+    //Наводимся на первую камеру и расширяем ее вправо
     await page.locator('[role="gridcell"][tabindex="0"]').hover();
     await page.locator('[role="gridcell"][tabindex="0"] [role="group"]:nth-child(3) button:nth-child(1)').click(); // СДЕЛАТЬ ЛОКАТОРЫ
-    //Ячейка 2 исчезла
+    //Проверяем что ячейка справа исчезла
     await expect (page.locator('[role="gridcell"][tabindex="1"]')).toBeHidden();
-
+    //Расширяем первую ячейку вниз
     await page.locator('[role="gridcell"][tabindex="0"] [role="group"]:nth-child(4) button:nth-child(1)').click();
-    //Ячейки 4 и 5 исчезли
+    //Проверяем что ячейки 4 и 5 исчезли
     await expect (page.locator('[role="gridcell"][tabindex="3"]')).toBeHidden();
     await expect (page.locator('[role="gridcell"][tabindex="4"]')).toBeHidden();
-
+    //Наводимся на последнюю камеру и расширяем ее вверх
     await page.locator('[role="gridcell"][tabindex="8"]').hover();
     await page.locator('[role="gridcell"][tabindex="8"] [role="group"]:nth-child(2) button:nth-child(1)').click();
-    //Ячейка 6 исчезла
+    //Проверяем что ячейка 6 исчезла
     await expect (page.locator('[role="gridcell"][tabindex="5"]')).toBeHidden();
-
+    //Наводимся на предпоследнюю камеру и расширяем ее влево
     await page.locator('[role="gridcell"][tabindex="7"]').hover();
     await page.locator('[role="gridcell"][tabindex="7"] [role="group"]:nth-child(1) button:nth-child(1)').click();
-    //Ячейка 7 исчезла
+    //Проверяем что ячейка 7 исчезла
     await expect (page.locator('[role="gridcell"][tabindex="6"]')).toBeHidden();
+    //Возвращаем расщиренную ячейку в начальное состояние
     await page.locator('[role="gridcell"][tabindex="7"] [role="group"]:nth-child(1) button:nth-child(2)').click();
+    //Проверяем что в замещенной ячейке теперь сообщение
     await expect (page.getByText("Drag camera here")).toBeVisible();
-
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
-
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
-
 });
 
 
@@ -234,43 +251,38 @@ test('Cells deleting (CLOUD-T234)', async ({ page }) => {
 
     await page.locator('#at-layout-menu').click();
     await page.locator('[title="3\u00D73"]').click();
+    //Удаляем первую ячейку
     await page.locator('[role="gridcell"][tabindex="0"]').hover();
     await page.locator('[role="gridcell"][tabindex="0"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
-    //Ячейка 1 пуста
     await expect (page.locator('[role="gridcell"][tabindex="0"] h6')).toHaveText("Drag camera here");
-
+    //Удаляем ячейку посередине
     await page.locator('[role="gridcell"][tabindex="4"]').hover();
     await page.locator('[role="gridcell"][tabindex="4"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
-    //Ячейка 5 пуста
     await expect (page.locator('[role="gridcell"][tabindex="4"] h6')).toHaveText("Drag camera here");
-
+    //Удаляем последнюю ячейку
     await page.locator('[role="gridcell"][tabindex="8"]').hover();
     await page.locator('[role="gridcell"][tabindex="8"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
-    //Ячейка 9 пуста
     await expect (page.locator('[role="gridcell"][tabindex="8"] h6')).toHaveText("Drag camera here");
-
     //Удаляем правый столбец
     await page.locator('[role="gridcell"][tabindex="2"]').hover();
     await page.locator('[role="gridcell"][tabindex="2"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
     await page.locator('[role="gridcell"][tabindex="5"]').hover();
     await page.locator('[role="gridcell"][tabindex="5"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
-
+    //Проверяем, что последняя удаленная ячейка не отображается
     await expect (page.locator('[role="gridcell"][tabindex="5"]')).toBeHidden();
-
     //Удаляем нижний ряд
     await page.locator('[role="gridcell"][tabindex="7"]').hover();
     await page.locator('[role="gridcell"][tabindex="7"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
     await page.locator('[role="gridcell"][tabindex="6"]').hover();
     await page.locator('[role="gridcell"][tabindex="6"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
-
+    //Проверяем, что последняя удаленная ячейка не отображается
     await expect (page.locator('[role="gridcell"][tabindex="6"]')).toBeHidden();
-
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
     console.log(requestPromise);
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
-
 });
 
 
@@ -280,7 +292,6 @@ test('Clear layout from empty cells (CLOUD-T236)', async ({ page }) => {
     await page.locator('[title="1\u00D71"]').click();
     //В момент создания раскладки есть некая анимация, если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
     await page.waitForTimeout(500);
-
     //Добавляем два столбца справа
     await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
     await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
@@ -292,7 +303,6 @@ test('Clear layout from empty cells (CLOUD-T236)', async ({ page }) => {
     await expect (page.locator('[role="gridcell"][tabindex="3"] h6')).toHaveText("Drag camera here");
     await expect (page.locator('[role="gridcell"][tabindex="4"] h6')).toHaveText("Drag camera here");
     await expect (page.locator('[role="gridcell"][tabindex="5"] h6')).toHaveText("Drag camera here");
-
 
     //Проверяем открыта ли панель с камерами, и открываем если нет
     if (!(await isCameraListOpen(page))) {
@@ -318,10 +328,63 @@ test('Clear layout from empty cells (CLOUD-T236)', async ({ page }) => {
     //Жмем на кнопку очистки
     await page.getByRole('button', { name: 'Clean up'}).click();
     expect (await page.locator('[role="gridcell"]').count()).toEqual(2);
-
+    //Сохраняем раскладку
     let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+});
 
+test('Undo layout changings (CLOUD-T237)', async ({ page }) => {
+    // await page.pause();
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="3\u00D73"]').click();
+    //В момент создания раскладки есть некая анимация, если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
+    await page.waitForTimeout(500);
+    //Удаляем две ячейки
+    await page.locator('[role="gridcell"][tabindex="2"]').hover();
+    await page.locator('[role="gridcell"][tabindex="2"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
+    await page.locator('[role="gridcell"][tabindex="5"]').hover();
+    await page.locator('[role="gridcell"][tabindex="5"] button').last().click();
+    //ПРоверяем что в последней ячейке есть сообщение
+    await expect (page.locator('[role="gridcell"][tabindex="5"] h6')).toHaveText("Drag camera here");
+    await expect (page.locator('[role="gridcell"][tabindex="5"] .VideoCell__video')).toBeHidden();
+    //Отменяем удаление последней ячейки и проверяем что в ней идет видео
+    await page.locator('.layout [role="group"] button').nth(1).click(); // СДЕЛАТЬ ЛОКАТОРЫ
+    await expect (page.locator('[role="gridcell"][tabindex="5"] h6')).toBeHidden();
+    await expect (page.locator('[role="gridcell"][tabindex="5"] .VideoCell__video')).toBeVisible();
+    //Переключаем разрешение на первой и второй ячейках
+    await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+    await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_HIGH"]').click();
+    await expect (page.locator('[role="gridcell"][tabindex="0"]')).toContainText("High");
+    await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+    await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_LOW"]').click();
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText("Low");
+    //Дважды отменяем изменения
+    await page.locator('.layout [role="group"] button').nth(1).click();
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText("Auto");
+    await page.locator('.layout [role="group"] button').nth(1).click();
+    await expect (page.locator('[role="gridcell"][tabindex="0"]')).toContainText("Auto");
+    //Возвращаем отмененное изменение один раз
+    await page.locator('.layout [role="group"] button').nth(2).click();
+    await expect (page.locator('[role="gridcell"][tabindex="0"]')).toContainText("High");
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText("Auto");
+    //Расширяем первую камеру вправо
+    await page.locator('[role="gridcell"][tabindex="0"]').hover();
+    await page.locator('[role="gridcell"][tabindex="0"] [role="group"]:nth-child(3) button:nth-child(1)').click(); // СДЕЛАТЬ ЛОКАТОРЫ
+    //Проверяем что вторая ячейка исчезла
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toBeHidden();
+    //Отменяем изменение
+    await page.locator('.layout [role="group"] button').nth(1).click();
+    //Проверяем что вернулась и в ней идет видео
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toBeVisible();
+    await expect (page.locator('[role="gridcell"][tabindex="1"] .VideoCell__video')).toBeVisible();
+    //Возвращаем изменения
+    await page.locator('.layout [role="group"] button').nth(2).click();
+    await expect (page.locator('[role="gridcell"][tabindex="1"]')).toBeHidden();
+    //Сохраняем раскладку
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(7);
 });

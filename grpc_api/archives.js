@@ -169,7 +169,7 @@ export async function getArchiveList() {
                 output.push(unit);
             }
         }
-        console.log(output);
+
         return output;
     } else console.log(`Error: Coudn't pull archive list. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
