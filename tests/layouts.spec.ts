@@ -346,7 +346,7 @@ test('Undo layout changings (CLOUD-T237)', async ({ page }) => {
     await page.locator('[role="gridcell"][tabindex="2"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
     await page.locator('[role="gridcell"][tabindex="5"]').hover();
     await page.locator('[role="gridcell"][tabindex="5"] button').last().click();
-    //ПРоверяем что в последней ячейке есть сообщение
+    //Проверяем что в последней ячейке есть сообщение
     await expect (page.locator('[role="gridcell"][tabindex="5"] h6')).toHaveText("Drag camera here");
     await expect (page.locator('[role="gridcell"][tabindex="5"] .VideoCell__video')).toBeHidden();
     //Отменяем удаление последней ячейки и проверяем что в ней идет видео
@@ -387,4 +387,118 @@ test('Undo layout changings (CLOUD-T237)', async ({ page }) => {
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await requestPromise;
     expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(7);
+});
+
+test('Add cameras to cells (CLOUD-T238)', async ({ page }) => {
+    // await page.pause();
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="3\u00D73"]').click();
+    //В момент создания раскладки есть некая анимация, если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
+    await page.waitForTimeout(500);
+    //Добавляем столбец справа
+    await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
+    //Удаляем две ячейки
+    await page.locator('[role="gridcell"][tabindex="2"]').hover();
+    await page.locator('[role="gridcell"][tabindex="2"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
+    await page.locator('[role="gridcell"][tabindex="5"]').hover();
+    await page.locator('[role="gridcell"][tabindex="5"] button').last().click();
+
+    //Проверяем открыта ли панель с камерами, и открываем если нет
+    if (!(await isCameraListOpen(page))) {
+        await page.getByRole('button', { name: 'Hardware'}).click();
+    }
+
+    //Получаем координаты ячеек для добавляения, чтобы потом перетащить туда камеры
+    let cellIDs = [2, 5, 9, 10, 11];
+    let cellsCoorinates = Array();
+    if (await isCameraListOpen(page)){
+        for (let cameraId of cellIDs) {
+            let coordinates = await page.locator(`[role="gridcell"][tabindex="${cameraId}"]`).boundingBox();
+            if (coordinates === null) {
+                test.fail();
+            } else {
+                cellsCoorinates.push(coordinates);
+            }
+        }
+    }
+
+    //Добавляем камеры в ячейки
+    for (let i = 9; i < 14; i++) {
+        await page.locator('[data-testid="at-camera-list-item"]').nth(i).hover();
+        await page.mouse.down();
+        await page.mouse.move(cellsCoorinates[i-9]!.x + cellsCoorinates[i-9]!.width / 2, cellsCoorinates[i-9]!.y + cellsCoorinates[i-9]!.height / 2);
+        await page.mouse.up();
+    }
+    //Проверяем что в добавленных ячейках есть видео
+    await expect (page.locator('[role="gridcell"][tabindex="2"] .VideoCell__video')).toBeVisible();
+    await expect (page.locator('[role="gridcell"][tabindex="5"] .VideoCell__video')).toBeVisible();
+    await expect (page.locator('[role="gridcell"][tabindex="9"] .VideoCell__video')).toBeVisible();
+    await expect (page.locator('[role="gridcell"][tabindex="10"] .VideoCell__video')).toBeVisible();
+    await expect (page.locator('[role="gridcell"][tabindex="11"] .VideoCell__video')).toBeVisible();
+    //Сохраняем раскладку
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+    expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(12);
+});
+
+test.only('Changing cells streams (CLOUD-T239)', async ({ page }) => {
+    // await page.pause();
+    await page.locator('#at-layout-menu').click();
+    await page.locator('[title="3\u00D73"]').click();
+
+    //Переключаем потоки раскладок - первый ряд High, второй Low, третий остаётся Auto
+    for (let i = 0; i < 6; i++) {
+        if (i < 3) {
+            await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+            await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_HIGH"]').click();
+        } else if (i < 6) {
+            await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+            await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_LOW"]').click();
+        }
+    }
+
+    //Проверяем что все камеры имеют нужный поток
+    for (let i = 0; i < 9; i++) {
+        if (i < 3) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("High"); 
+        } else if (i < 6) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Low");
+        } else if (i < 9) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Auto");
+        }
+    }
+
+    //Проверяем цифры на верхней панели с кнопками, отражающие сколько камер принадлежат конкретному потоку
+    await expect (page.locator(`header [role="group"]>span:nth-child(1)`)).toContainText("3");
+    await expect (page.locator(`header [role="group"]>span:nth-child(2)`)).toContainText("3");
+    await expect (page.locator(`header [role="group"]>span:nth-child(3)`)).toContainText("3");
+
+    //Сохраняем раскладку
+    let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await requestPromise;
+
+    //Снова проверяем что все камеры имеют нужный поток
+    for (let i = 0; i < 9; i++) {
+        if (i < 3) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("High");
+        } else if (i < 6) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Low");
+        } else if (i < 9) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Auto");
+        }
+    }
+
+    //Перезагружаем страницу и вновь проверяем потоки камер
+    await page.reload();
+    for (let i = 0; i < 9; i++) {
+        if (i < 3) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("High");
+        } else if (i < 6) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Low");
+        } else if (i < 9) {
+            await expect (page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Auto");
+        }
+    }
 });
