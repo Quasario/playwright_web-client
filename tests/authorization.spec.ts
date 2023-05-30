@@ -44,8 +44,8 @@ let userWithoutWEB = {
 
 test.beforeAll(async () => {
     await getHostName();
-    await roleAnnihilator();
-    await userAnnihilator();
+    await roleAnnihilator("all");
+    await userAnnihilator("all");
     await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "100");
     await createRole(role);
     await setRolePermissions(role);
@@ -59,9 +59,9 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
     console.log(Configuration.users);
     console.log(Configuration.roles);
-    await roleAnnihilator();
-    await userAnnihilator();
-    await cameraAnnihilator();
+    await roleAnnihilator("all");
+    await userAnnihilator("all");
+    await cameraAnnihilator("all");
     exchangeIndexCredentials("", "");
 });
 

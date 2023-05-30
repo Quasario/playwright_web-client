@@ -10,7 +10,7 @@ export async function getLayoutList() {
 
     let layoutList = await request.json();
     
-    if (request.ok) {  
+    if (request.ok) {
         return layoutList.items;
     } else console.log(`Error: could not pull layouts list. Code: ${request.status}`.red);
 };

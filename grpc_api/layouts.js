@@ -112,6 +112,7 @@ export async function createLayout(camerasEndpoints, width=2, height=2, layoutNa
     } else console.log(`Error: Layout "${layoutName}" (${width}x${height}) was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     
     await configurationCollector("layouts");
+    return layoutUUID;
 };
 
 

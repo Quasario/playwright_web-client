@@ -1,16 +1,7 @@
 import {currentURL, archiveDirection, createdUnits, hostName} from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
+import { configurationCollector } from "../utils/utils.js";
 
-// export async function getHostName() {
-//     let request = await fetch(`${currentURL}/hosts`, {
-//         headers: {
-//             "Authorization": "Basic cm9vdDpyb290",
-//         }
-//     });
-
-//     let hosts = await request.json();
-//     return hosts[0];
-// }
 
 export async function createArchive(archiveName='White') {
 
@@ -55,8 +46,8 @@ export async function createArchive(archiveName='White') {
 
     if (request.ok && !response.failed.length) {
         console.log(`Archive(${archiveName}) was successfully created!`.green);
-    }else console.log(`Error: Archive was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
-    
+    } else console.log(`Error: Archive was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
+    await configurationCollector("archives");
 }
 
 export async function createArchiveVolume(archiveName='White', fileSize=10) {
@@ -108,7 +99,7 @@ export async function createArchiveVolume(archiveName='White', fileSize=10) {
 
     if (request.ok && !response.failed.length) {
         console.log(`Archive volume with size: ${fileSize} was successfully created in direction ${archiveDirection}!`.green);
-    }else console.log(`Error: Archive volume was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
+    } else console.log(`Error: Archive volume was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     
 };
 
@@ -140,7 +131,8 @@ export async function deleteArchive(archiveName) {
 
     if (request.ok && !response.failed.length) {
         console.log(`Archive (${archiveName}) was successfully deleted!`.green);
-    }else console.log(`Error: Archive (${archiveName}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
+    } else console.log(`Error: Archive (${archiveName}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
+    await configurationCollector("archives");
 };
 
 export async function getArchiveList() {
@@ -228,7 +220,8 @@ export async function createArchiveContext(archiveName, cameraEndpoints, isConst
 
     if (request.ok && !response.failed.length) {
         console.log(`Archive context was created for cameras ([${cameraEndpoints.toString()}])!`.green);
-    }else console.log(`Error: Coudn't created archive context for cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
+    } else console.log(`Error: Coudn't created archive context for cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
+    await configurationCollector("cameras");
 };
 
 

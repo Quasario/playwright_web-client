@@ -5,7 +5,8 @@ import { deleteLayouts } from "../grpc_api/layouts";
 import { getRolesAndUsers, deleteRoles } from "../grpc_api/roles";
 import { deleteUsers } from "../grpc_api/users";
 import { Configuration } from "../global_variables";
-import { deleteGroup, getGroups } from "../grpc_api/groups"
+import { deleteGroup, getGroups } from "../grpc_api/groups";
+import { getArchiveList } from "../grpc_api/archives";
 
 
 
@@ -36,10 +37,10 @@ export async function getCameraList() {
     return(newArr);
 };
 
-export async function cameraAnnihilator(cameras = []) {
+export async function cameraAnnihilator(cameras) {
     let cameraList;
 
-    if (cameras.length == 0){
+    if (cameras == "all") {
         cameraList = await getCameraList();
     } else cameraList = cameras;
 
@@ -57,10 +58,10 @@ export async function cameraAnnihilator(cameras = []) {
     
 };
 
-export async function layoutAnnihilator(layouts = []) {
+export async function layoutAnnihilator(layouts) {
     let layoutList;
     
-    if (layouts.length == 0){
+    if (layouts == "all") {
         layoutList = await getLayoutList();
     } else layoutList = layouts;
     
@@ -78,10 +79,10 @@ export async function layoutAnnihilator(layouts = []) {
     
 };
 
-export async function userAnnihilator(users = []) {
+export async function userAnnihilator(users) {
     let userList;
     
-    if (users.length == 0){
+    if (users == "all") {
         let rolesAndUsers = await getRolesAndUsers();
         userList = rolesAndUsers.users;
     } else userList = users;
@@ -100,10 +101,10 @@ export async function userAnnihilator(users = []) {
     
 };
 
-export async function roleAnnihilator(roles = []) {
+export async function roleAnnihilator(roles) {
     let roleList;
     
-    if (roles.length == 0){
+    if (roles == "all") {
         let rolesAndUsers = await getRolesAndUsers();
         roleList = rolesAndUsers.roles;
     } else roleList = roles;
@@ -122,10 +123,10 @@ export async function roleAnnihilator(roles = []) {
     
 };
 
-export async function groupAnnihilator(groups = []) {
+export async function groupAnnihilator(groups) {
     let groupList;
     
-    if (groups.length == 0){
+    if (groups == "all"){
         groupList = await getGroups();
     } else groupList = groups;
     
@@ -154,7 +155,6 @@ export async function configurationCollector(type = "all") {
         Configuration.layouts = layoutList;
     }
 
-
     if (type == "all" || type == "users" || type == "roles") {
 
         let usersRoles = await getRolesAndUsers();
@@ -174,6 +174,11 @@ export async function configurationCollector(type = "all") {
     if (type == "all" || type == "groups") {
         let groupList = await getGroups();
         Configuration.groups = groupList;
+    }
+
+    if (type == "all" || type == "archives") {
+        let archiveList = await getArchiveList();
+        Configuration.archives = archiveList;
     } 
 }
 

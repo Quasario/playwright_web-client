@@ -2,17 +2,6 @@ import { currentURL, videoFolder, hostName } from '../global_variables';
 import { green, blue, yellow, red } from 'colors';
 import { configurationCollector } from "../utils/utils.js";
 
-// export async function getHostName() {
-//     let request = await fetch(`${currentURL}/hosts`, {
-//         headers: {
-//             "Authorization": "Basic cm9vdDpyb290",
-//         }
-//     });
-
-//     let hosts = await request.json();
-//     return hosts[0];
-// };
-
 
 export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80", displayID="", displayName="") {
     // let hostName = await getHostName();

@@ -475,11 +475,11 @@ test.describe("Searching block", () => {
       
     test.afterAll(async () => {
         if (lastTest) {
-            await cameraAnnihilator();
-            await layoutAnnihilator();
-            await groupAnnihilator();
-            await roleAnnihilator();
-            await userAnnihilator();
+            await cameraAnnihilator("all");
+            await layoutAnnihilator("all");
+            await groupAnnihilator("all");
+            await roleAnnihilator("all");
+            await userAnnihilator("all");
         }
     });
 
@@ -774,7 +774,7 @@ test.describe("Searching block", () => {
     test('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
         // await page.pause();
     
-        await groupAnnihilator();
+        await groupAnnihilator("all");
         let first = await createGroup("First");
         let second = await createGroup("Second");
         let subfirst = await createGroup("Subfirst", first);
