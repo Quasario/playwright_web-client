@@ -45,7 +45,7 @@ export async function createArchive(archiveName='White') {
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Archive(${archiveName}) was successfully created!`.green);
+        console.log(`Archive "${archiveName}" was successfully created!`.green);
     } else console.log(`Error: Archive was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     await configurationCollector("archives");
 }
@@ -98,7 +98,7 @@ export async function createArchiveVolume(archiveName='White', fileSize=10) {
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Archive volume with size: ${fileSize} was successfully created in direction ${archiveDirection}!`.green);
+        console.log(`Archive volume with size: ${fileSize}GB was successfully created in direction ${archiveDirection}!`.green);
     } else console.log(`Error: Archive volume was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
     
 };
@@ -130,8 +130,8 @@ export async function deleteArchive(archiveName) {
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Archive (${archiveName}) was successfully deleted!`.green);
-    } else console.log(`Error: Archive (${archiveName}) was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Archive "${archiveName}" was successfully deleted!`.green);
+    } else console.log(`Error: Archive "${archiveName}" was not deleted. Code: ${request.status}, Failed: ${response.failed}`.red);
     await configurationCollector("archives");
 };
 
@@ -219,7 +219,7 @@ export async function createArchiveContext(archiveName, cameraEndpoints, isConst
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Archive context was created for cameras ([${cameraEndpoints.toString()}])!`.green);
+        console.log(`Archive context was created for cameras (${cameraEndpoints.toString()})!`.green);
     } else console.log(`Error: Coudn't created archive context for cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
     await configurationCollector("cameras");
 };

@@ -3,8 +3,78 @@ import { green, blue, yellow, red } from 'colors';
 import { configurationCollector } from "../utils/utils.js";
 
 
-export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80", displayID="", displayName="") {
-    // let hostName = await getHostName();
+export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80", displayID="", displayName="", startPosition=-1) {
+    let unitsList = []
+
+    for (let i = 1; i <= count; i++) {
+        let cameraPropObj = {
+            "type": "DeviceIpint",
+            "units": [],
+            "properties": [
+                {
+                    "id": "vendor",
+                    "value_string": `${vendor}`,
+                    "properties": []
+                },
+                {
+                    "id": "model",
+                    "value_string": `${model}`,
+                    "properties": []
+                },
+                {
+                    "id": "user",
+                    "value_string": `${login}`,
+                    "properties": []
+                },
+                {
+                    "id": "password",
+                    "value_string": `${password}`,
+                    "properties": []
+                },
+                {
+                    "id": "address",
+                    "value_string": `${address}`,
+                    "properties": []
+                },
+                {
+                    "id": "port",
+                    "value_string": `${port}`,
+                    "properties": []
+                },
+                {
+                    "id": "display_name",
+                    "value_string": `${displayName}`,
+                    "properties": []
+                },
+                {
+                    "id": "recordingMode",
+                    "value_string": "",
+                    "properties": []
+                },
+                {
+                    "id": "archiveBinding",
+                    "value_string": "",
+                    "properties": []
+                }
+            ]
+        }
+        if (startPosition == -1) {
+            cameraPropObj.properties.push({
+                "id": "display_id",
+                "value_string": `${displayID}`,
+                "properties": []
+            });
+        
+        } else {
+            cameraPropObj.properties.push({
+                "id": "display_id",
+                "value_string": `${i + startPosition}`,
+                "properties": []
+            });
+        }
+
+        unitsList.push(cameraPropObj);
+    }
 
     let body = {
         "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
@@ -12,85 +82,26 @@ export async function createCamera(count=1, vendor="AxxonSoft", model="Virtual s
             "added": [
                 {
                     "uid": `hosts/${hostName}`,
-                    "units": [
-                        {
-                            "type": "DeviceIpint",
-                            "units": [],
-                            "properties": [
-                                {
-                                    "id": "vendor",
-                                    "value_string": `${vendor}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "model",
-                                    "value_string": `${model}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "user",
-                                    "value_string": `${login}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "password",
-                                    "value_string": `${password}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "address",
-                                    "value_string": `${address}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "port",
-                                    "value_string": `${port}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "display_name",
-                                    "value_string": `${displayName}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "display_id",
-                                    "value_string": `${displayID}`,
-                                    "properties": []
-                                },
-                                {
-                                    "id": "recordingMode",
-                                    "value_string": "",
-                                    "properties": []
-                                },
-                                {
-                                    "id": "archiveBinding",
-                                    "value_string": "",
-                                    "properties": []
-                                }
-                            ]
-                        }
-                    ]
+                    "units": unitsList
                 }
             ]
         }
     };
 
-    for (let i = 1; i <= count; i++) {
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
 
-        let request = await fetch(`${currentURL}/grpc`, {
-            headers: {
-                "Authorization": "Basic cm9vdDpyb290",
-            },
-            method: "POST",
-            body: JSON.stringify(body)
-        });
+    let response = await request.json();
 
-        let response = await request.json();
-
-        if (request.ok && !response.failed.length) {
-            console.log(`Camera (${vendor}/${model}) №${i} was successfully created!`.green);
-        } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
-    }
+    if (request.ok && !response.failed.length) {
+        console.log(`Was created ${count} ${vendor}/${model} cameras!`.green);
+    } else console.log(`Error: Coudn't create ${count} ${vendor}/${model} cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
+    
     await configurationCollector("cameras");
 }
 
@@ -358,6 +369,206 @@ export async function changeIPServerCameraName(videoChannelEndpoint, newName) {
 };
 
 export async function addVirtualVideo(camerasList, highStreamVideo, lowStreamVideo) {
+    let changeList = [];
+
+    for (let camera of camerasList) {
+        if (highStreamVideo) {
+            changeList.push(
+                {
+                    "uid": `${camera.videochannelID}/Streaming.0`,
+                    "type": "Streaming",
+                    "properties": [
+                        {
+                            "id": "folder",
+                            "value_string": `${videoFolder}/${highStreamVideo}`
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            )
+        }
+        if (lowStreamVideo) {
+            changeList.push(
+                {
+                    "uid": `${camera.videochannelID}/Streaming.1`,
+                    "type": "Streaming",
+                    "properties": [
+                        {
+                            "id": "folder",
+                            "value_string": `${videoFolder}/${lowStreamVideo}`
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            )
+        }
+    }
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": changeList
+            // [
+            //     {
+            //         "uid": `${camera.videochannelID}/Streaming.0`,
+            //         "type": "Streaming",
+            //         "properties": [
+            //             {
+            //                 "id": "folder",
+            //                 "value_string": `${videoFolder}/${highStreamVideo}`
+            //             }
+            //         ],
+            //         "opaque_params": []
+            //     },
+            //     {
+            //         "uid": `${camera.videochannelID}/Streaming.1`,
+            //         "type": "Streaming",
+            //         "properties": [
+            //             {
+            //                 "id": "folder",
+            //                 "value_string": `${videoFolder}/${lowStreamVideo}`
+            //             }
+            //         ],
+            //         "opaque_params": []
+            //     },
+            // ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+
+    let response = await request.json();
+    
+    if (request.ok && !response.failed.length) {
+        console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to cameras ${camerasList[0].videochannelID} - ${camerasList[camerasList.length - 1].videochannelID}.`.green);
+    } else console.log(`Error: Coudn't add video to cameras ${camerasList[0].videochannelID} - ${camerasList[camerasList.length - 1].videochannelID}. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+};
+
+
+export async function getUnitsList(endpoints) {
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ListUnits",
+        "data": {
+            "unit_uids": endpoints
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    if (request.ok) {
+        console.log(`Unit list for ${endpoints.toString()} were provided.`.green);
+        let response = await request.json();
+        // console.log(response);
+        return response;
+    } else console.log(`Error: Pull units information failed. Code: ${request.status}`.red);
+};
+
+export async function createCameraOld(count=1, vendor="AxxonSoft", model="Virtual several streams", login="admin", password="admin", address="0.0.0.0", port="80", displayID="", displayName="") {
+    // let hostName = await getHostName();
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "added": [
+                {
+                    "uid": `hosts/${hostName}`,
+                    "units": [
+                        {
+                            "type": "DeviceIpint",
+                            "units": [],
+                            "properties": [
+                                {
+                                    "id": "vendor",
+                                    "value_string": `${vendor}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "model",
+                                    "value_string": `${model}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "user",
+                                    "value_string": `${login}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "password",
+                                    "value_string": `${password}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "address",
+                                    "value_string": `${address}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "port",
+                                    "value_string": `${port}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "display_name",
+                                    "value_string": `${displayName}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "display_id",
+                                    "value_string": `${displayID}`,
+                                    "properties": []
+                                },
+                                {
+                                    "id": "recordingMode",
+                                    "value_string": "",
+                                    "properties": []
+                                },
+                                {
+                                    "id": "archiveBinding",
+                                    "value_string": "",
+                                    "properties": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+
+    for (let i = 1; i <= count; i++) {
+
+        let request = await fetch(`${currentURL}/grpc`, {
+            headers: {
+                "Authorization": "Basic cm9vdDpyb290",
+            },
+            method: "POST",
+            body: JSON.stringify(body)
+        });
+
+        let response = await request.json();
+
+        if (request.ok && !response.failed.length) {
+            console.log(`Camera (${vendor}/${model}) №${i} was successfully created!`.green);
+        } else console.log(`Error: Camera №${i} was not created. Code: ${request.status}, Failed: ${response.failed}`.red);
+    }
+    await configurationCollector("cameras");
+}
+
+export async function addVirtualVideoOld(camerasList, highStreamVideo, lowStreamVideo) {
     for(let camera of camerasList) {
 
         let body = {
@@ -404,31 +615,5 @@ export async function addVirtualVideo(camerasList, highStreamVideo, lowStreamVid
             console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to camera (${camera.videochannelID}).`.green);
         } else console.log(`Error: Coudn't add video to camera ${camera.videochannelID}. Code: ${request.status}, Failed: ${response.failed}`.red);
     }
-};
-
-
-export async function getUnitsList(endpoints) {
-
-    let body = {
-        "method": "axxonsoft.bl.config.ConfigurationService.ListUnits",
-        "data": {
-            "unit_uids": endpoints
-        }
-    };
-
-    let request = await fetch(`${currentURL}/grpc`, {
-        headers: {
-            "Authorization": "Basic cm9vdDpyb290",
-        },
-        method: "POST",
-        body: JSON.stringify(body)
-    });
-    
-    if (request.ok) {
-        console.log(`Unit list for ${endpoints.toString()} were provided.`.green);
-        let response = await request.json();
-        // console.log(response);
-        return response;
-    } else console.log(`Error: Pull units information failed. Code: ${request.status}`.red);
 };
 

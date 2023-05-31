@@ -52,7 +52,7 @@ test.describe("Tests without created layout", () => {
         await deleteArchive('Black');
         await cameraAnnihilator("all");
         await layoutAnnihilator("all");
-        await createCamera(8, "AxxonSoft", "Virtual several streams", "admin", "admin", "0.0.0.0", "80", "", "Camera");
+        await createCamera(8, "AxxonSoft", "Virtual several streams", "admin", "admin", "0.0.0.0", "80", "", "Camera", 0);
         await createCamera(2, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "", "Camera");
         await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
         await createArchive("Black");
@@ -509,7 +509,7 @@ test.describe("Tests with created layout", () => {
 
     test('Check positions in menu (CLOUD-T350)', async ({ page }) => {
         
-        await page.pause();
+        // await page.pause();
         await page.locator('#at-layout-menu').click();
         await page.locator('[title="2\u00D72"]').click();
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));

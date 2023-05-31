@@ -20,11 +20,8 @@ test.describe("Common block", () => {
         await layoutAnnihilator(Configuration.layouts);
         await roleAnnihilator(Configuration.roles);
         await userAnnihilator(Configuration.users);
-        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera");
-        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "2", "Camera");
-        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "3", "Camera");
-        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "4", "Camera");
-        await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera");
+        await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera", 0);
+        await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera", 4);
         await createLayout(Configuration.cameras, 2, 2, "Test Layout");
         await createRole("New_Role");
         await setRolePermissions("New_Role");
@@ -129,7 +126,7 @@ test.describe("Common block", () => {
         expect(Number(listWidth) == 250).toBeTruthy();
     });
     
-    test('Camrera panel width saving after reload (CLOUD-T716)', async ({ page }) => {
+    test('Camera panel width saving after reload (CLOUD-T716)', async ({ page }) => {
         // await page.pause();
         await page.getByRole('button', { name: 'Hardware' }).click();
         await page.locator('.camera-list [role=none]').hover();
