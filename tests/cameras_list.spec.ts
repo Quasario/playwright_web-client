@@ -177,7 +177,7 @@ test.describe("Common block", () => {
         // await page.pause();
         await page.getByRole('button', { name: 'Hardware' }).click();
         expect(await isCameraListOpen(page)).toBeTruthy();
-        //Кликаем на камеру и смотим чтобы список не закрылся
+        //Кликаем на камеру и смотрим чтобы список не закрылся
         await page.getByRole('button', { name: '1.Camera', exact: true }).click();
         await expect (page.locator('[role="gridcell"]').filter({hasText: /1\.Camera/})).toBeVisible();
         expect(await isCameraListOpen(page)).toBeTruthy();
@@ -208,7 +208,7 @@ test.describe("Common block", () => {
         await requestPromise;
         await expect(page.locator('[alt="1.Camera"]')).toHaveAttribute("src", /blob:.*/);
         await page.getByRole('button', { name: '3.Camera', exact: true }).hover();
-        //Снапшоты с заглушкой несут не картинку, а svg
+        //Снапшоты с заглушкой содержат не img, а svg
         await expect(page.locator('[data-testid="at-preview-snapshot"] svg')).toBeVisible();
         requestPromise = page.waitForRequest(request => request.url().includes(`${currentURL}/live/media/snapshot/${hostName}/DeviceIpint.5/SourceEndpoint.video:0:1`));
         await page.getByRole('button', { name: '5.0.Camera', exact: true }).hover();
@@ -222,7 +222,7 @@ test.describe("Common block", () => {
         // await page.pause();
         await page.getByRole('button', { name: 'Hardware' }).click();
         await page.getByRole('button', { name: '1.Camera', exact: true }).click();
-        //Так как DOM выборе камеры перестраивается, то нужно подождать пока элементы снова в нем появятся иначе count() выдаст 0
+        //Так как DOM при выборе камеры перестраивается, то нужно подождать пока элементы снова в нем появятся иначе count() выдаст 0
         await page.locator('[data-testid="at-camera-title"]').first().waitFor({state: 'attached', timeout: 5000});
         let cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
         expect (cameraCountInLive).toEqual(1);
