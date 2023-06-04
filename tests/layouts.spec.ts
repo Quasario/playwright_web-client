@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds } from "../utils/utils.js";
 
 //Список названий/ID камер в конфигурации
 let cameras: any;
@@ -481,7 +481,7 @@ test.describe("Tests without created layout", () => {
 
 test.describe("Tests with created layout", () => {
     //эту раскладку удалять будем только после всех тестов
-    let stableLayout
+    let stableLayout;
     
     test.beforeAll(async () => {
         await getHostName();
@@ -497,9 +497,7 @@ test.describe("Tests with created layout", () => {
     
     test.beforeEach(async ({ page }) => {
         await configurationCollector("layouts");
-        console.log(Configuration.layouts);
         let deleteCreatedLayouts = Configuration.layouts.filter(item => item.meta.layout_id != stableLayout);
-        console.log(deleteCreatedLayouts);
         await layoutAnnihilator(deleteCreatedLayouts);
         await page.goto(currentURL);
         await page.getByLabel('Login').fill('root');
@@ -604,5 +602,417 @@ test.describe("Tests with created layout", () => {
         expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(1);
     });
 
+    test('Copying layout (CLOUD-T352/CLOUD-T353)', async ({ page }) => {
+        
+        // await page.pause();
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Copy layout', exact: true }).click();
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Проверяем количество ячеек в созданной раскладке
+        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        //Проверяем имя созданной раскладки
+        await expect (page.locator('#at-layout-item-0')).toHaveText("Test Layout copy");
+        //Создаем копию копии
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Copy layout', exact: true }).click();
+        requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Проверяем количество ячеек в созданной раскладке
+        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        //Проверяем имя созданной раскладки
+        await expect (page.locator('#at-layout-item-0')).toHaveText("Test Layout copy 1");
+    });
+
+    test('Layout changing (CLOUD-T354)', async ({ page }) => {
+        
+        // await page.pause();
+        //Создаем x4 раскладку
+        await page.locator('#at-layout-menu').click();
+        await page.locator('[title="2\u00D72"]').click();
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Переходим в меню редактирования
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
+        //Меняем разрешение камер в нижнем ряду
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(3).click();
+        await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_LOW"]').click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(2).click();
+        await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_HIGH"]').click();
+        //Удаляем вторую камеру с раскладки
+        await page.locator('[role="gridcell"][tabindex="1"]').hover();
+        await page.locator('[role="gridcell"][tabindex="1"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
+        //Добавляем столбец справа и камеры туда
+        await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
+        await page.getByRole('button', { name: 'Hardware'}).click();
+        await page.locator('[role="gridcell"][tabindex="4"]').click();
+        await page.locator('[data-testid="at-camera-list-item"]').nth(9).click();
+        await page.locator('[role="gridcell"][tabindex="5"]').click();
+        await page.locator('[data-testid="at-camera-list-item"]').nth(10).click();
+        //Сохраняем изменения
+        requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Проверяем количество активных ячеек
+        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(5);
+        //Проверяем что в новых ячейках нужные камеры
+        await expect (page.locator('[role="gridcell"][tabindex="4"]')).toContainText(`${cameras[9].id}.${cameras[9].name}`);
+        await expect (page.locator('[role="gridcell"][tabindex="5"]')).toContainText(`${cameras[10].id}.${cameras[10].name}`);
+        //Проверяем потоки измененных ячеек
+        await expect (page.locator('[role="gridcell"][tabindex="2"]')).toContainText("High");
+        await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Low");
+    });
+
+    test('Synchronous layout changing (CLOUD-T401)', async ({ page }) => {
+        
+        // await page.pause();
+        //Создаем x1 раскладку
+        await page.locator('#at-layout-menu').click();
+        await page.locator('[title="1\u00D71"]').click();
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Создаем x4 раскладку
+        await page.locator('#at-layout-menu').click();
+        await page.locator('[title="2\u00D72"]').click();
+        requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Переходим в меню редактирования x4 раскладки
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
+        //Меняем разрешение камер в нижнем ряду
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(3).click();
+        await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_LOW"]').click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(2).click();
+        await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_HIGH"]').click();
+        //Удаляем вторую камеру с раскладки
+        await page.locator('[role="gridcell"][tabindex="1"]').hover();
+        await page.locator('[role="gridcell"][tabindex="1"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
+        //Выбираем раскладку x1
+        await page.locator('#at-layout-expand').click();
+        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await page.locator('#at-layout-item-1').click({force: true, position: {x:10, y:10}}); //Костыль с координатами так как forse флаг жмет на центр блока минуя видимость и промахивается
+        //Добавляем столбец справа и камеру туда
+        await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
+        await page.getByRole('button', { name: 'Hardware'}).click();
+        await page.locator('[role="gridcell"][tabindex="1"]').click();
+        await page.locator('[data-testid="at-camera-list-item"]').nth(7).click();
+        await page.getByRole('button', { name: 'Hardware'}).click();
+        //Сохраняем изменения
+        requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Проверяем количество активных ячеек
+        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+        //Проверяем что в новой ячейке нужная камера
+        await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText(`${cameras[7].id}.${cameras[7].name}`);
+        //Выбираем раскладку x4
+        await page.locator('#at-layout-expand').click();
+        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await page.locator('#at-layout-item-0').click({force: true});
+        //Проверям количество ячеек
+        await page.locator('[role="gridcell"][tabindex="3"]').waitFor({state: 'attached', timeout: 5000});
+        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(3);
+        //Проверяем потоки измененных ячеек
+        await expect (page.locator('[role="gridcell"][tabindex="2"]')).toContainText("High");
+        await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Low");
+    });
+
+    test('Layout rename (CLOUD-T355)', async ({ page }) => {
+        //Создаем несколько раскладку через API
+        await createLayout(Configuration.cameras, 3, 2, "New Test Layout");
+        // await page.pause();
+        //Создаем x4 раскладку
+        await page.locator('#at-layout-menu').click();
+        await page.locator('[title="2\u00D72"]').click();
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Мееяем название первой раскладки
+        await page.locator('#at-layout-item-0').dblclick({force: true});
+        await page.locator('#at-layout-item-0 input').fill('Red Square', {force: true});
+        await page.locator('#at-layout-item-0').press('Enter');
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Red Square');
+        requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Red Square');
+        //Мееяем название второй раскладки
+        await page.locator('#at-layout-expand').click();
+        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await page.locator('#at-layout-item-1').dblclick({force: true});
+        await page.locator('#at-layout-item-1 input').type(' Changed');
+        requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        await expect(page.locator('#at-layout-item-1')).toHaveText('New Test Layout Changed');
+    });
+
+    test('Pick layout in filled panel (CLOUD-T374)', async ({ page }) => {
+        //Создаем несколько раскладок через API
+        await createLayout(Configuration.cameras, 1, 1, "Test Layout 2");
+        await createLayout(Configuration.cameras, 3, 2, "Test Layout 3");
+        await createLayout(Configuration.cameras, 3, 3, "Test Layout 4");
+        await createLayout(Configuration.cameras, 1, 2, "Test Layout 5");
+        // await page.pause();
+        await page.reload();
+        //Разворачиваем панель раскладок и проверяем, что последняя раскладка отображается в визуальной области
+        await page.locator('#at-layout-expand').click();
+        await expect(page.locator('#at-layout-item-4')).toBeInViewport();
+        //Кликаем по последней раскладке ждем пока блок свернется и проверяем, что раскладка отображается в визуальной области, то есть список пролистался до нее
+        await page.locator('#at-layout-item-4').click({force: true});
+        await page.waitForTimeout(500); //таймаут анимации панели
+        await expect(page.locator('#at-layout-item-4')).toBeInViewport();
+    });
+
+    test('Layout search (CLOUD-T402)', async ({ page }) => {
+        //Создаем x1 раскладку через API
+        await createLayout(Configuration.cameras, 1, 1, "221B Baker Street");
+        // await page.pause();
+        //Создаем x4 раскладку в UI
+        await page.locator('#at-layout-menu').click();
+        await page.locator('[title="2\u00D72"]').click();
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+
+        let searchList = ["street", "e", "New", "221B Baker Street", "new layout"];
+    
+        for (let input of searchList) {
+            //Вписываем в поиск значение из тестового массива
+            await page.locator('input[type="search"]').fill(input);
+            //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+            await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+            await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+            //Считаем количество отображаемых раскладок на панели
+            let camerasCount = await page.locator('#at-layout-items li').count();
+            //Провяем необходимое количество раскладок на панели
+            if (input === "e") {
+                expect(camerasCount).toBeGreaterThan(1);
+            } else {
+                expect(camerasCount).toEqual(1);
+            }   
+        }
+    });
+
+    test('Nonexistent layout search (CLOUD-T403)', async ({ page }) => {
+
+        // await page.pause();
+        await page.locator('#at-layout-items li').waitFor({state: 'attached', timeout: 10000});
+
+        let searchList = ["undefined", "nihill",];
+    
+        for (let input of searchList) {
+            //Вписываем в поиск значение из тестового массива
+            await page.locator('input[type="search"]').fill(input);
+            //Ждем пока элемент загрузки списка появится и исчезнет из DOM
+            await page.locator('[role="progressbar"]').waitFor({state: 'attached', timeout: 5000});
+            await page.locator('[role="progressbar"]').waitFor({state: 'detached', timeout: 5000});
+            //Считаем количество отображаемых раскладок на панели
+            let camerasCount = await page.locator('#at-layout-items li').count();
+            //Провяем необходимое количество раскладок на панели
+            expect(camerasCount).toEqual(0);
+        }
+    });
+
+    test('Change layouts order (CLOUD-T374)', async ({ page }) => {
+        //Создаем несколько раскладок через API
+        await createLayout(Configuration.cameras, 1, 1, "Test Layout 3");
+        await createLayout(Configuration.cameras, 3, 2, "Test Layout 2");
+        // await page.pause();
+        await page.reload();
+        //Переходим в режим переопределения порядка раскладок
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
+        //Разворачиваем панель раскладок
+        await page.locator('#at-layout-expand').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        //Получаем координаты второй раскладки в панели
+        let firstLayout = await page.locator('#at-layout-item-0').boundingBox();
+        //Перетаскиваем вторую раскладку на место первой
+        await page.locator('#at-layout-item-1').hover();
+        await page.mouse.down();
+        await page.mouse.move(firstLayout!.x + firstLayout!.width / 2, firstLayout!.y + firstLayout!.height / 2);
+        await page.mouse.up();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        //Сохраняем изменения
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Проверяем порядок раскладок
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout 3');
+        await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
+        //Перезагружаем страницу и проверяем порядок раскладок
+        await page.reload();
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout 3');
+        await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
+    });
+
+    test('Delete layouts (CLOUD-T409)', async ({ page }) => {
+        //Создаем несколько раскладок через API
+        await createLayout(Configuration.cameras, 1, 1, "Test Layout 2");
+        await createLayout(Configuration.cameras, 3, 2, "Test Layout 3");
+        // await page.pause();
+        await page.reload();
+        //Переходим в режим переопределения порядка раскладок
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
+        //Удаялем первую раскладку не разворачивая блок с раскладками
+        await page.locator('#at-layout-item-0 button:last-child').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        expect(await page.locator('#at-layout-items li').count()).toEqual(2);
+        //Разворачиваем панель раскладок и удаляем вторую добавленную раскладку
+        await page.locator('#at-layout-expand').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await page.locator('#at-layout-item-0 button:last-child').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        //Сохраняем изменения
+        let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await requestPromise;
+        //Проверям количество и названия раскладок
+        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+    });
+
+    test('Cancel delete layouts (CLOUD-T408)', async ({ page }) => {
+        //Создаем несколько раскладок через API
+        await createLayout(Configuration.cameras, 1, 1, "Test Layout 2");
+        await createLayout(Configuration.cameras, 3, 2, "Test Layout 3");
+        // await page.pause();
+        await page.reload();
+        //Переходим в режим переопределения порядка раскладок
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
+        //Разворачиваем панель раскладок и удаляем две раскладки добавленную раскладку
+        await page.locator('#at-layout-expand').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await page.locator('#at-layout-item-0 button:last-child').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        expect(await page.locator('#at-layout-items li').count()).toEqual(2);
+        await page.locator('#at-layout-item-0 button:last-child').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        //Слушаем запросы, чтобы при отмене не отсылался запрос на изменение раскладки
+        let requestNotSent = true;
+        page.on("request", request => {
+            if(request.url().includes(`/v1/layouts?`)) {
+                requestNotSent = false;
+            }
+        });
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+        //Проверям количество и названия раскладок
+        await page.locator('#at-layout-item-2').waitFor({state: 'attached', timeout: 5000});
+        expect(await page.locator('#at-layout-items li').count()).toEqual(3);
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout 3');
+        await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
+        //Проверяем, что запрос на раскладки не был отправлен
+        expect(requestNotSent).toBeTruthy();
+    });
+
+    test('Cancel change layouts order (CLOUD-T407)', async ({ page }) => {
+        //Создаем несколько раскладок через API
+        await createLayout(Configuration.cameras, 1, 1, "Test Layout 2");
+        await createLayout(Configuration.cameras, 3, 2, "Test Layout 3");
+        // await page.pause();
+        await page.reload();
+        //Переходим в режим переопределения порядка раскладок
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
+        //Разворачиваем панель раскладок
+        await page.locator('#at-layout-expand').click();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        //Получаем координаты второй раскладки в панели
+        let firstLayout = await page.locator('#at-layout-item-0').boundingBox();
+        //Перетаскиваем вторую раскладку на место первой
+        await page.locator('#at-layout-item-1').hover();
+        await page.mouse.down();
+        await page.mouse.move(firstLayout!.x + firstLayout!.width / 2, firstLayout!.y + firstLayout!.height / 2);
+        await page.mouse.up();
+        await waitAnimationEnds(page.locator('#at-layout-items'));
+        //Слушаем запросы, чтобы при отмене не отсылался запрос на изменение раскладки
+        let requestNotSent = true;
+        page.on("request", request => {
+            if(request.url().includes(`/v1/layouts?`)) {
+                requestNotSent = false;
+            }
+        });
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+        //Проверяем порядок раскладок
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout 3');
+        await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
+        //Проверяем, что запрос на раскладки не был отправлен
+        expect(requestNotSent).toBeTruthy();
+    });
+
+    test('Cancel layout changing (CLOUD-T405)', async ({ page }) => {
+        
+        // await page.pause();
+        //Переходим в меню редактирования
+        await page.locator('#at-layout-menu').click();
+        await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
+        //Меняем разрешение камер в нижнем ряду
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(3).click();
+        await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_LOW"]').click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(2).click();
+        await page.locator('[role="listbox"] [data-value="CAMERA_STREAM_RESOLUTION_HIGH"]').click();
+        //Удаляем вторую камеру с раскладки
+        await page.locator('[role="gridcell"][tabindex="1"]').hover();
+        await page.locator('[role="gridcell"][tabindex="1"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
+        //Добавляем столбец справа и камеры туда
+        await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
+        await page.getByRole('button', { name: 'Hardware'}).click();
+        await page.locator('[role="gridcell"][tabindex="4"]').click();
+        await page.locator('[data-testid="at-camera-list-item"]').nth(9).click();
+        await page.locator('[role="gridcell"][tabindex="5"]').click();
+        await page.locator('[data-testid="at-camera-list-item"]').nth(10).click();
+        //Слушаем запросы, чтобы при отмене не отсылался запрос на изменение раскладки
+        let requestNotSent = true;
+        page.on("request", request => {
+            if(request.url().includes(`/v1/layouts?`)) {
+                requestNotSent = false;
+            }
+        });
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+        //Проверяем количество активных ячеек
+        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        //Проверяем потоки ячеек
+        await expect (page.locator('[role="gridcell"][tabindex="0"]')).toContainText("Auto");
+        await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText("Auto");
+        await expect (page.locator('[role="gridcell"][tabindex="2"]')).toContainText("Auto");
+        await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Auto");
+        //Проверяем, что запрос на раскладки не был отправлен
+        expect(requestNotSent).toBeTruthy();
+    });
+
+    test('Cancel layout rename (CLOUD-T406)', async ({ page }) => {
+        
+        // await page.pause();
+        await page.locator('#at-layout-item-0').waitFor({state: 'visible', timeout: 30000});
+        //Активируем поле для изменения названия, но сразу отменяем действие
+        await page.locator('#at-layout-item-0').dblclick({force: true});
+        let requestNotSent = true;
+        page.on("request", request => {
+            if(request.url().includes(`/v1/layouts?`)) {
+                requestNotSent = false;
+            }
+        });
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+        //Проверяем, что запрос на раскладки не был отправлен
+        expect(requestNotSent).toBeTruthy();
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout');
+        //Редактируем название раскладки и отменяем изменения
+        await page.locator('#at-layout-item-0').dblclick({force: true});
+        await page.locator('#at-layout-item-0 input').fill('Red Square', {force: true});
+        await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+        //Проверяем, что запрос на раскладки не был отправлен
+        expect(requestNotSent).toBeTruthy();
+        await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout');
+    });
 })
 

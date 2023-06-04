@@ -197,3 +197,7 @@ export function getIdByRoleName(roleName) {
         }
     }
 };
+
+export async function waitAnimationEnds(locator) {
+    await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.finished)));
+}
