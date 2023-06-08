@@ -32,8 +32,8 @@ export async function createUser(userName='User') {
     });
     
     if (request.ok) {
-        console.log(`The user (${userName}) was successfully created! UUID: ${userId}`.green);
-    } else console.log(`Error: The user(${userName}) was not created. Code: ${request.status}`.red);
+        console.log(`The user "${userName}" was successfully created! UUID: ${userId}`.green);
+    } else console.log(`Error: The user "${userName}" was not created. Code: ${request.status}`.red);
 
     await configurationCollector("users");
 }

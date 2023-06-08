@@ -735,9 +735,7 @@ test.describe("Searching block", () => {
     });
     
     test('Search by special symbols (CLOUD-T138)', async ({ page }) => {
-        test.skip();
         // await page.pause();
-        
         //Список значений для поиска
         let searchList = ["!", "@", "$", "%", "*", "^", "(", ")", "-", "_", "=", "?", "<", "'", ">", '"', "/", "|", "\\", ".", ",", "~", ":", ";", " ", "#", "+", "&"];
     

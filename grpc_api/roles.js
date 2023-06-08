@@ -54,8 +54,8 @@ export async function createRole(roleName='Role') {
     });
     
     if (request.ok) {
-        console.log(`The role (${roleName}) was successfully created! UUID: ${roleId}`.green);
-    } else console.log(`Error: The role (${roleName}) was not created. Code: ${request.status}`.red);
+        console.log(`The role "${roleName}" was successfully created! UUID: ${roleId}`.green);
+    } else console.log(`Error: The role "${roleName}" was not created. Code: ${request.status}`.red);
 
     await configurationCollector("roles");
 };

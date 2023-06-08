@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { currentURL } from '../global_variables';
-import { createRole, setRolePermissions, } from '../methods/roles';
-import { createUser, setUserPassword, assignUserRole, } from '../methods/users';
-import { createArchive, createArchiveVolume, } from '../methods/archives';
-import { createCamera, } from '../methods/cameras';
+// import { currentURL } from '../global_variables';
+// import { createRole, setRolePermissions, } from '../methods/roles';
+// import { createUser, setUserPassword, assignUserRole, } from '../methods/users';
+// import { createArchive, createArchiveVolume, } from '../methods/archives';
+// import { createCamera, } from '../methods/cameras';
 // import { createRole, setRolePermissions, createUser, setUserPassword, assignUserRole, createArchive, createArchiveVolume } from '../grpc_methods';
 
 
@@ -35,15 +35,35 @@ test('test', async ({ page }) => {
 });
 
 
-test.only('Filter by imported file', async ({ page }) => {
-  await page.goto(currentURL);
-  await page.pause();
+// test.only('Filter by imported file', async ({ page }) => {
+//   await page.goto(currentURL);
+//   await page.pause();
+//   await page.getByLabel('Login').fill('root');
+//   await page.getByLabel('Password').fill('root');
+//   await page.getByLabel('Login').press('Enter');
+//   await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
+//   await page.locator('#import-search-camlist-btn').setInputFiles('./test_data/example.xlsx');
+//   await expect(page.getByRole('button', { name: '108.Camera' })).toBeHidden();
+//   await expect(page.getByRole('button', { name: '109.Camera' })).toBeVisible();
+//   await expect(page.getByRole('button', { name: '110.Camera' })).toBeHidden();
+// });
+
+test.only('Camera list with groups (CLOUD-T140)', async ({ page }) => {
+  // await page.pause();
+  await page.goto("http://127.0.0.1/");
   await page.getByLabel('Login').fill('root');
   await page.getByLabel('Password').fill('root');
-  await page.getByLabel('Login').press('Enter');
-  await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
-  await page.locator('#import-search-camlist-btn').setInputFiles('./test_data/example.xlsx');
-  await expect(page.getByRole('button', { name: '108.Camera' })).toBeHidden();
-  await expect(page.getByRole('button', { name: '109.Camera' })).toBeVisible();
-  await expect(page.getByRole('button', { name: '110.Camera' })).toBeHidden();
+  await page.getByLabel('Password').press('Enter');
+
+  for (let i = 1; i <= 50; i++ ) {
+    await page.waitForResponse(request => request.url().includes(`http://127.0.0.1/group`));
+    await expect(page.locator('[id="at-groups-list"]')).toHaveText('Default', { ignoreCase: false });
+    await page.locator('[id="at-groups-list"]').click();
+    await expect(page.getByRole('button', { name: "Group", exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: "Group 2", exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: "Group > Subgroup", exact: true })).toBeVisible();
+    console.log(`Прогон #${i}`);
+    await page.reload();
+  }
+
 });
