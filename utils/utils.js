@@ -201,3 +201,8 @@ export function getIdByRoleName(roleName) {
 export async function waitAnimationEnds(locator) {
     await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.finished)));
 }
+
+export function timeToSeconds(time, accurancy = 0) {
+    let timeArr = time.split(':');
+    return (timeArr[0]*24 + timeArr[1]*60 + timeArr[2] + accurancy);
+}

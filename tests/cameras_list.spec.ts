@@ -76,6 +76,8 @@ test.describe("Common block", () => {
         await expect(page.locator("xpath=//*/p/span[text()='5.0.Camera']")).toHaveCSS("color", "rgb(250, 250, 250)");
         await expect(page.locator("xpath=//*/p/span[text()='5.1.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
         await expect(page.locator("xpath=//*/p/span[text()='5.2.Camera']")).not.toHaveCSS("color", "rgb(250, 250, 250)");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -100,6 +102,8 @@ test.describe("Common block", () => {
         await page.getByRole('button', { name: 'Hardware' }).click();
         //Проверяем что панель действительно закрылась
         await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeHidden();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -124,6 +128,8 @@ test.describe("Common block", () => {
         await page.getByRole('button', { name: 'Hardware' }).click();
         listWidth = await page.evaluate(() => window.localStorage.getItem('cameraList'));
         expect(Number(listWidth) == 250).toBeTruthy();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Camera panel width saving after reload (CLOUD-T716)', async ({ page }) => {
@@ -157,6 +163,8 @@ test.describe("Common block", () => {
         realWidth = await page.locator('.camera-list>div>div').boundingBox();
         expect(Number(realWidth?.width) == 250).toBeTruthy();
         expect(Number(listWidth) == 250).toBeTruthy();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Reltime list update (CLOUD-T123)', async ({ page }) => {
@@ -171,6 +179,8 @@ test.describe("Common block", () => {
         await page.getByRole('button', { name: `11.Camera`, exact: true }).waitFor({state: 'detached', timeout: 5000});
         expect(await page.getByRole('button', { name: '10.Camera', exact: true }).count()).toEqual(0);
         expect(await page.getByRole('button', { name: '11.Camera', exact: true }).count()).toEqual(0);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Check "Manually open and close" parameter (CLOUD-T124)', async ({ page }) => {
@@ -195,6 +205,8 @@ test.describe("Common block", () => {
         await page.getByRole('button', { name: '3.Camera', exact: true }).click();
         await expect (page.locator('[role="gridcell"]').filter({hasText: /3\.Camera/})).toBeVisible();
         expect(await isCameraListOpen(page)).not.toBeTruthy();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Check camera preview in list (CLOUD-T125)', async ({ page }) => {
@@ -216,6 +228,8 @@ test.describe("Common block", () => {
         await expect(page.locator('[alt="5.0.Camera"]')).toHaveAttribute("src", /blob:.*/);
         await page.getByRole('button', { name: '5.1.Camera', exact: true }).hover();
         await expect(page.locator('[data-testid="at-preview-snapshot"] svg')).toBeVisible();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Check "Open selected camera on layout" parameter (CLOUD-T126)', async ({ page }) => {
@@ -250,6 +264,8 @@ test.describe("Common block", () => {
         cameraCountInLive = await page.locator('[data-testid="at-camera-title"]').count();
         expect (cameraCountInLive).toEqual(1);
         await expect (page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText("5.0.Camera");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Check "Show only live cameras" parameter (CLOUD-T127)', async ({ page }) => {
@@ -279,6 +295,8 @@ test.describe("Common block", () => {
         for (let camera of Configuration.cameras) {
             expect(await page.getByRole('button', { name: `${camera.displayId}.${camera.displayName}`, exact: true }).count()).toEqual(1);
         };
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -302,11 +320,12 @@ test.describe("Common block", () => {
         await page.getByRole('button', { name: `1.Camera`, exact: true }).waitFor({state: 'attached', timeout: 5000});
         expect(await page.getByRole('button', { name: `Camera`, exact: true }).count()).toEqual(0);
         await expect(page.locator('[data-testid="at-sort-by-id"]')).toBeVisible();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
     test('Reltime camera status change in list (CLOUD-T129)', async ({ page }) => {
-        test.skip();
         // await page.pause();
         await page.getByRole('button', { name: 'Hardware'}).click();
     
@@ -317,9 +336,9 @@ test.describe("Common block", () => {
         //Проверяем подсветку выключенных/включенных одиночных и nvr-камер в списке
         for (let camera of Configuration.cameras) {
             if (camera.isActivated) {
-                await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
+                await expect.soft(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
             } else {
-                await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).not.toHaveCSS("color", "rgb(250, 250, 250)");
+                await expect.soft(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).not.toHaveCSS("color", "rgb(250, 250, 250)");
                 //Включаем камеры обратно
                 if (camera.isIpServer) {
                     await changeIPServerCameraActiveStatus(camera.videochannelID, true);
@@ -330,8 +349,10 @@ test.describe("Common block", () => {
         };
         //Проверяем что все камеры отображаются как включенные
         for (let camera of Configuration.cameras) {
-            await expect(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
+            await expect.soft(page.locator(`xpath=//*/p/span[text()='${camera.displayId}.${camera.displayName}']`)).toHaveCSS("color", "rgb(250, 250, 250)");
         };
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Camera ID change (CLOUD-T130)', async ({ page }) => {
@@ -348,6 +369,8 @@ test.describe("Common block", () => {
         await expect(page.getByRole('button', { name: `A.Camera`, exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: `5.11.Camera`, exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: `5.5.Camera`, exact: true })).toBeVisible();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Camera name change (CLOUD-T131)', async ({ page }) => {
@@ -364,6 +387,8 @@ test.describe("Common block", () => {
         await expect(page.getByRole('button', { name: `4.221B Baker Street`, exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: `5.1.Кабинет 1-эт`, exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: `5.3.undefined`, exact: true })).toBeVisible();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
        
 })
@@ -516,6 +541,8 @@ test.describe("Searching block", () => {
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(5)).toHaveText('5.3.undefined', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(6)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('5.5.Площадь', { ignoreCase: false });
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Sort by ID (CLOUD-T134)', async ({ page }) => {
@@ -542,7 +569,8 @@ test.describe("Searching block", () => {
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(5)).toHaveText('5.1.Кабинет 1-эт', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(6)).toHaveText('4.221B Baker Street', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('2.Device', { ignoreCase: false });
-    
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Sort by favorite (CLOUD-T132)', async ({ page }) => {
@@ -572,6 +600,8 @@ test.describe("Searching block", () => {
         //Убираем сорировку и проверяем название последней камеры
         await page.locator('[data-testid="at-favorites-checkbox"]').click();
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Sort by imported list (CLOUD-T135)', async ({ page }) => {
@@ -593,6 +623,8 @@ test.describe("Searching block", () => {
         //Убираем сорировку и проверяем название последней камеры
         await page.locator('[data-testid="at-favorites-checkbox"]').click();
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by partial match (CLOUD-T136)', async ({ page }) => {
@@ -618,6 +650,8 @@ test.describe("Searching block", () => {
                 expect(camerasCount).toEqual(1);
             }   
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by single ID (CLOUD-T137)', async ({ page }) => {
@@ -643,6 +677,8 @@ test.describe("Searching block", () => {
                 expect(camerasCount).toEqual(1);
             }   
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by double ID (CLOUD-T764)', async ({ page }) => {
@@ -668,6 +704,8 @@ test.describe("Searching block", () => {
                 expect(camerasCount).toEqual(1);
             }   
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by fullname, case sensitive (CLOUD-T762)', async ({ page }) => {
@@ -689,6 +727,8 @@ test.describe("Searching block", () => {
             //Провяем необходимое количество камер в результатах поиска
             expect(camerasCount).toEqual(1);
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by fullname, case insensitive (CLOUD-T763)', async ({ page }) => {
@@ -710,6 +750,8 @@ test.describe("Searching block", () => {
             //Провяем необходимое количество камер в результатах поиска
             expect(camerasCount).toEqual(1);
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by nonexistent camera (CLOUD-T139)', async ({ page }) => {
@@ -730,8 +772,9 @@ test.describe("Searching block", () => {
             let camerasCount = await page.locator('[data-testid="at-camera-list-item"]').count();
             //Провяем необходимое количество камер в результатах поиска
             expect(camerasCount).toEqual(0);
-    
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Search by special symbols (CLOUD-T138)', async ({ page }) => {
@@ -764,6 +807,8 @@ test.describe("Searching block", () => {
                     expect(camerasCount).toEqual(1);
             }
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Camera list with gruops (CLOUD-T140)', async ({ page }) => {
@@ -816,7 +861,8 @@ test.describe("Searching block", () => {
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
         expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(8);
-    
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Access to group panel check (CLOUD-T503)', async ({ page }) => {
@@ -839,6 +885,8 @@ test.describe("Searching block", () => {
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(7)).toHaveText('A.Camera', { ignoreCase: false });
         expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(8);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Access to cameras (CLOUD-T141)', async ({ page }) => {
@@ -855,7 +903,8 @@ test.describe("Searching block", () => {
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('4.221B Baker Street', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('A.Camera', { ignoreCase: false });
         expect(await page.locator('[data-testid="at-camera-list-item"]').count()).toEqual(4);
-    
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 });
 

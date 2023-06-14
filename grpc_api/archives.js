@@ -166,34 +166,70 @@ export async function getArchiveList() {
     } else console.log(`Error: Coudn't pull archive list. Code: ${request.status}, Failed: ${response.failed}`.red);
 };
 
-export async function createArchiveContext(archiveName, cameraEndpoints, isConstantRec=true) {
+export async function createArchiveContext(archiveName, camerasList, isConstantRec=true, stream="High") {
     let unitsList = [];
-    for (let camera of cameraEndpoints) {
-        unitsList.push({
-                    "type": "ArchiveContext",
-                    "properties": [
-                        {
-                            "id": "camera_ref",
-                            "value_string": camera
-                        },
-                        {
-                            "id": "constant_recording",
-                            "value_bool": isConstantRec
-                        },
-                        {
-                            "id": "prerecord_sec",
-                            "value_int32": 0
-                        },
-                        {
-                            "id": "day_depth",
-                            "value_int32": 0
-                        },
-                        {
-                            "id": "specific_fps",
-                            "value_double": 0
-                        }
-                    ]
-                })
+    for (let camera of camerasList) {
+        if (stream == "Low") {
+            unitsList.push({
+                "type": "ArchiveContext",
+                "properties": [
+                    {
+                        "id": "camera_ref",
+                        "value_string": camera.accessPoint
+                    },
+                    {
+                        "id": "constant_recording",
+                        "value_bool": isConstantRec
+                    },
+                    {
+                        "id": "streaming_id",
+                        "value_string": camera.videoStreams[1].accessPoint
+                    },
+                    {
+                        "id": "prerecord_sec",
+                        "value_int32": 0
+                    },
+                    {
+                        "id": "day_depth",
+                        "value_int32": 0
+                    },
+                    {
+                        "id": "specific_fps",
+                        "value_double": 0
+                    }
+                ]
+            });
+        } else {
+            unitsList.push({
+                "type": "ArchiveContext",
+                "properties": [
+                    {
+                        "id": "camera_ref",
+                        "value_string": camera.accessPoint
+                    },
+                    {
+                        "id": "constant_recording",
+                        "value_bool": isConstantRec
+                    },
+                    {
+                        "id": "streaming_id",
+                        "value_string": camera.videoStreams[0].accessPoint
+                    },
+                    {
+                        "id": "prerecord_sec",
+                        "value_int32": 0
+                    },
+                    {
+                        "id": "day_depth",
+                        "value_int32": 0
+                    },
+                    {
+                        "id": "specific_fps",
+                        "value_double": 0
+                    }
+                ]
+            });
+        }          
     };
 
     let body = {
@@ -219,7 +255,8 @@ export async function createArchiveContext(archiveName, cameraEndpoints, isConst
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Archive context was created for cameras (${cameraEndpoints.toString()})!`.green);
+        let output = camerasList.map(item => `${item.displayId}.${item.displayName}`)
+        console.log(`Archive context was created for cameras ${output.toString()}!`.green);
     } else console.log(`Error: Coudn't created archive context for cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
     await configurationCollector("cameras");
 };

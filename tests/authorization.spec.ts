@@ -145,11 +145,3 @@ test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page
     await expect(page.getByLabel('Login')).toBeEmpty();
     await expect(page.getByLabel('Password')).toBeEmpty();
 });
-
-
-
-
-
-
-
-

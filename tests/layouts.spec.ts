@@ -26,8 +26,7 @@ test.describe("Tests without created layout", () => {
         await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
         await createArchive("Black");
         await createArchiveVolume("Black", 20);
-        let cameraEndpoints = Configuration.cameras.map(item => item.accessPoint);
-        await createArchiveContext("Black", cameraEndpoints, false);
+        await createArchiveContext("Black", Configuration.cameras, false);
         cameras = Configuration.cameras.map(item => { return ({
             id: item.displayId,
             name: item.displayName  
@@ -64,6 +63,8 @@ test.describe("Tests without created layout", () => {
         //Проверяем название и разрешение камеры
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -94,6 +95,8 @@ test.describe("Tests without created layout", () => {
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(1)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(2)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(3)).toContainText("Auto");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -121,6 +124,8 @@ test.describe("Tests without created layout", () => {
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(4)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(8)).toContainText("Auto");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -151,6 +156,8 @@ test.describe("Tests without created layout", () => {
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(5)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(10)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(15)).toContainText("Auto");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -188,6 +195,8 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -227,6 +236,8 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     
@@ -277,6 +288,8 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Undo layout changings (CLOUD-T237)', async ({ page }) => {
@@ -331,6 +344,8 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(7);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Add cameras to cells (CLOUD-T238)', async ({ page }) => {
@@ -384,6 +399,8 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(12);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Undo camera addition to layout (CLOUD-T717)', async ({ page }) => {
@@ -416,6 +433,8 @@ test.describe("Tests without created layout", () => {
         await page.locator('.layout [role="group"] button').nth(1).click();
         await expect(page.locator('[role="gridcell"][tabindex="5"] video')).toBeHidden();
         await expect (page.locator('[role="gridcell"][tabindex="5"] h6')).toHaveText("Drag camera here");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
     
     test('Changing cells streams (CLOUD-T239)', async ({ page }) => {
@@ -465,7 +484,10 @@ test.describe("Tests without created layout", () => {
                 await expect(page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Auto");
             }
         }
-    
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+
         //Перезагружаем страницу и вновь проверяем потоки камер
         await page.reload();
         for (let i = 0; i < 9; i++) {
@@ -477,6 +499,7 @@ test.describe("Tests without created layout", () => {
                 await expect(page.locator(`[role="gridcell"][tabindex="${i}"]`)).toContainText("Auto");
             }
         }
+
     });
 
     test('Create layout after stream change (CLOUD-T463)', async ({ page }) => {
@@ -502,7 +525,8 @@ test.describe("Tests without created layout", () => {
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(1)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(2)).toContainText("Auto");
         await expect(page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(3)).toContainText("Auto");
-    
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);    
     });
 })
 
@@ -557,6 +581,8 @@ test.describe("Tests with created layout", () => {
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(2)).toHaveText('Edit layout');
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(3)).toHaveText('Copy layout');
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(4)).toHaveText('Use by default');
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Pick default layout (CLOUD-T351)', async ({ page }) => {
@@ -627,6 +653,8 @@ test.describe("Tests with created layout", () => {
         await page.reload();
         await page.locator('[data-testid="at-camera-title"]').nth(0).waitFor({state: 'attached', timeout: 5000});
         expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(1);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Copying layout (CLOUD-T352/CLOUD-T353)', async ({ page }) => {
@@ -651,6 +679,8 @@ test.describe("Tests with created layout", () => {
         expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
         //Проверяем имя созданной раскладки
         await expect (page.locator('#at-layout-item-0')).toHaveText("Test Layout copy 1");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout changing (CLOUD-T354)', async ({ page }) => {
@@ -692,6 +722,8 @@ test.describe("Tests with created layout", () => {
         //Проверяем потоки измененных ячеек
         await expect (page.locator('[role="gridcell"][tabindex="2"]')).toContainText("High");
         await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Low");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Synchronous layout changing (CLOUD-T401)', async ({ page }) => {
@@ -748,6 +780,8 @@ test.describe("Tests with created layout", () => {
         //Проверяем потоки измененных ячеек
         await expect (page.locator('[role="gridcell"][tabindex="2"]')).toContainText("High");
         await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Low");
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout rename (CLOUD-T355)', async ({ page }) => {
@@ -778,6 +812,8 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         await expect(page.locator('#at-layout-item-1')).toHaveText('New Test Layout Changed');
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout rename partial (CLOUD-T890)', async ({ page }) => {
@@ -802,6 +838,8 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         await expect(page.locator('#at-layout-item-0')).toHaveText('Changed Layout');
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Accepting buttons is presented (CLOUD-T864)', async ({ page }) => {
@@ -829,6 +867,8 @@ test.describe("Tests with created layout", () => {
         await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeInViewport();
         await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeInViewport();
         await expect(page.locator('#at-layout-item-0 input')).toBeHidden();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Pick layout in filled panel (CLOUD-T374)', async ({ page }) => {
@@ -846,6 +886,8 @@ test.describe("Tests with created layout", () => {
         await page.locator('#at-layout-item-4').click({force: true});
         await page.waitForTimeout(500); //таймаут анимации панели
         await expect(page.locator('#at-layout-item-4')).toBeInViewport();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout search (CLOUD-T402)', async ({ page }) => {
@@ -876,6 +918,8 @@ test.describe("Tests with created layout", () => {
                 expect(camerasCount).toEqual(1);
             }   
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Nonexistent layout search (CLOUD-T403)', async ({ page }) => {
@@ -896,6 +940,8 @@ test.describe("Tests with created layout", () => {
             //Провяем необходимое количество раскладок на панели
             expect(camerasCount).toEqual(0);
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Change layouts order (CLOUD-T374)', async ({ page }) => {
@@ -922,6 +968,8 @@ test.describe("Tests with created layout", () => {
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Проверяем порядок раскладок
         await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout 3');
         await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
@@ -949,6 +997,8 @@ test.describe("Tests with created layout", () => {
         await page.locator('#at-app-mode-search').click();
         //Получаем сообщение с предупреждением
         await expect(page.locator('.MuiAlert-message')).toHaveText('Please select the camera');
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Delete layouts (CLOUD-T409)', async ({ page }) => {
@@ -976,6 +1026,8 @@ test.describe("Tests with created layout", () => {
         await requestPromise;
         //Проверям количество и названия раскладок
         expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Cancel delete layouts (CLOUD-T408)', async ({ page }) => {
@@ -1011,6 +1063,8 @@ test.describe("Tests with created layout", () => {
         await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
         //Проверяем, что запрос на раскладки не был отправлен
         expect(requestNotSent).toBeTruthy();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Cancel change layouts order (CLOUD-T407)', async ({ page }) => {
@@ -1046,6 +1100,8 @@ test.describe("Tests with created layout", () => {
         await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
         //Проверяем, что запрос на раскладки не был отправлен
         expect(requestNotSent).toBeTruthy();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Cancel layout changing (CLOUD-T405)', async ({ page }) => {
@@ -1086,6 +1142,8 @@ test.describe("Tests with created layout", () => {
         await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Auto");
         //Проверяем, что запрос на раскладки не был отправлен
         expect(requestNotSent).toBeTruthy();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Cancel layout rename (CLOUD-T406)', async ({ page }) => {
@@ -1111,6 +1169,8 @@ test.describe("Tests with created layout", () => {
         //Проверяем, что запрос на раскладки не был отправлен
         expect(requestNotSent).toBeTruthy();
         await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout');
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 })
 
@@ -1244,6 +1304,8 @@ test.describe("Tests with different users", () => {
         requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем Layout User
         await page.locator('#at-top-menu-btn').click();
         await page.getByRole('menuitem', { name: 'Change user' }).click();
@@ -1274,6 +1336,8 @@ test.describe("Tests with different users", () => {
             }
             await expect(page.locator(`[role="gridcell"][tabindex="${i}"] video`)).toBeVisible();
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout sharing without one cell (CLOUD-T411)', async ({ page }) => {
@@ -1311,6 +1375,8 @@ test.describe("Tests with different users", () => {
         requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем Layout User
         await page.locator('#at-top-menu-btn').click();
         await page.getByRole('menuitem', { name: 'Change user' }).click();
@@ -1338,6 +1404,8 @@ test.describe("Tests with different users", () => {
         await expect(page.locator('#at-layout-item-0')).toHaveText('Deleted cell');
         //Проверяем наличие иконки расшаренности
         await expect(page.locator('#at-layout-item-0 svg').nth(1)).toBeVisible();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Positions in shared layout menu (CLOUD-T412)', async ({ page }) => {
@@ -1391,6 +1459,8 @@ test.describe("Tests with different users", () => {
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(1)).toHaveText('Delete/Reorder layouts');
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(2)).toHaveText('Copy layout');
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(3)).toHaveText('Use by default');
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Delete shared layout (CLOUD-T413)', async ({ page }) => {
@@ -1451,6 +1521,8 @@ test.describe("Tests with different users", () => {
         await requestPromise;
         //Проверям количество раскладок
         expect(await page.locator('#at-layout-items li').count()).toEqual(0);
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем root
         await page.locator('#at-top-menu-btn').click();
         await page.getByRole('menuitem', { name: 'Change user' }).click();
@@ -1464,6 +1536,8 @@ test.describe("Tests with different users", () => {
         for (let i = 0; i < 4; i++) {
             await expect(page.locator(`[role="gridcell"][tabindex="${i}"] video`)).toBeVisible();
         }
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout changing access (CLOUD-T414)', async ({ page }) => {
@@ -1491,6 +1565,8 @@ test.describe("Tests with different users", () => {
         await page.locator('#at-layout-menu').click();
         await expect(page.locator('[role="menu"]').last().locator('li')).toHaveCount(1);//сделать локатор для меню раскладок
         await expect(page.getByRole('menuitem', { name: 'Use by default', exact: true })).toBeVisible();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
     test('Layout access forbid (CLOUD-T415)', async ({ page }) => {
@@ -1508,5 +1584,7 @@ test.describe("Tests with different users", () => {
         expect(await page.locator('#at-layout-items li').count()).toEqual(0);
         //Проверяем что меню раскладок скрыто
         await expect(page.locator('#at-layout-menu')).toBeHidden();
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 });
