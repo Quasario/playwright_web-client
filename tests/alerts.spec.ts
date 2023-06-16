@@ -45,13 +45,18 @@ test.describe("Common block", () => {
         await page.getByRole('button', { name: 'Hardware' }).click();
         await page.locator('[data-testid="at-camera-list-item"]').first().click();
         let cameraTime = await page.locator('[data-testid="at-camera-time"]').innerText();
+        let requestPromise = 
         await page.locator('.VideoCell--alert-review').click();
         await page.getByRole('button', { name: 'Alarm panel' }).click();
-        let alertTime = await page.locator('.alert-panel p').last().innerText();
+        let alertTime = await page.locator('.alert-panel p').last().innerText(); 
         console.log(cameraTime, timeToSeconds(cameraTime));
         console.log(alertTime, timeToSeconds(alertTime));
-        expect(timeToSeconds(cameraTime, -1) <= timeToSeconds(alertTime) <= timeToSeconds(cameraTime, 1)).toBeTruthy();
-        
+        //Погрешность -+секунда
+        expect(timeToSeconds(cameraTime, -1) <= timeToSeconds(alertTime) && timeToSeconds(alertTime) <= timeToSeconds(cameraTime, 1)).toBeTruthy();
+        await page.locator('.alert-panel .MuiGrid-item').click();
+        let pointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        console.log(pointerTime, timeToSeconds(pointerTime));
+        expect(timeToSeconds(alertTime, -1) <= timeToSeconds(pointerTime) && timeToSeconds(pointerTime) <= timeToSeconds(alertTime, 1)).toBeTruthy();
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });

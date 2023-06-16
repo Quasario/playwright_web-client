@@ -1,15 +1,21 @@
+import { test, expect, } from '@playwright/test';
 import { getCamerasEndpoints } from "../http_api/http_cameras";
 import { getLayoutList } from "../http_api/http_layouts";
 import { deleteCameras } from "../grpc_api/cameras";
 import { deleteLayouts } from "../grpc_api/layouts";
 import { getRolesAndUsers, deleteRoles } from "../grpc_api/roles";
 import { deleteUsers } from "../grpc_api/users";
-import { Configuration } from "../global_variables";
+import { Configuration, currentURL } from "../global_variables";
 import { deleteGroup, getGroups } from "../grpc_api/groups";
 import { getArchiveList } from "../grpc_api/archives";
 
 
-
+export async function authorization(page, userName, userPassword) {
+    await page.goto(currentURL);
+    await page.getByLabel('Login').fill(userName);
+    await page.getByLabel('Password').fill(userPassword);
+    await page.getByLabel('Password').press('Enter');
+};
 
 export async function isCameraListOpen(page) {
     await page.waitForTimeout(500); //list close/open animation timeout
@@ -204,5 +210,5 @@ export async function waitAnimationEnds(locator) {
 
 export function timeToSeconds(time, accurancy = 0) {
     let timeArr = time.split(':');
-    return (timeArr[0]*24 + timeArr[1]*60 + timeArr[2] + accurancy);
+    return (timeArr[0]*24*60 + timeArr[1]*60 + Number(timeArr[2]) + Number(accurancy));
 }
