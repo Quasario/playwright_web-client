@@ -78,7 +78,7 @@ test('Authorization attempt with an empty password (CLOUD-T154)', async ({ page 
     // await page.pause();
     await page.getByLabel('Login').fill('root');
     await page.getByRole('button', { name: 'Log in' }).click();
-    await expect(page.locator('id=password-helper-text')).toHaveText("Incorrect login or password");
+    await expect(page.locator('#password-helper-text')).toHaveText("Incorrect login or password");
     await expect(page.getByLabel('Login')).toBeEmpty();
 });
 
@@ -89,7 +89,7 @@ test('Authorization with an empty password (CLOUD-T633)', async ({ page }) => {
     await page.getByLabel('Login').fill('user');
     await page.getByLabel('Login').press('Enter');
     await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
-    await expect(page.locator('id=at-app-mode-live')).toBeVisible();
+    await expect(page.locator('#at-app-mode-live')).toBeVisible();
 });
 
 test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
@@ -100,7 +100,7 @@ test('Authorization with default server URL (CLOUD-T417)', async ({ page }) => {
     await page.getByLabel('Password').fill('root');
     await page.getByLabel('Password').press('Enter');
     await expect(page.getByRole('button', { name: 'Hardware' })).toBeVisible();
-    await expect(page.locator('id=at-app-mode-live')).toBeVisible();
+    await expect(page.locator('#at-app-mode-live')).toBeVisible();
     await page.locator('#at-top-menu-btn').click();
     await expect(page.getByText('root', { exact: true })).toBeVisible(); 
     await page.getByRole('menuitem', { name: 'Change user' }).click();
@@ -141,7 +141,7 @@ test('Authorization attempt without access to WEBUI (CLOUD-T157)', async ({ page
     await page.getByLabel('Login').fill('user');
     await page.getByLabel('Password').fill('admin123');
     await page.getByRole('button', { name: 'Log in' }).click();
-    await expect(page.locator('id=password-helper-text')).toHaveText("Access forbidden");
+    await expect(page.locator('#password-helper-text')).toHaveText("Access forbidden");
     await expect(page.getByLabel('Login')).toBeEmpty();
     await expect(page.getByLabel('Password')).toBeEmpty();
 });

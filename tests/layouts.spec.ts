@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds, authorization, logout } from "../utils/utils.js";
 
 //Список названий/ID камер в конфигурации
 let cameras: any;
@@ -39,9 +39,7 @@ test.describe("Tests without created layout", () => {
     test.beforeEach(async ({ page }) => {
         await layoutAnnihilator("all");
         await page.goto(currentURL);
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
+        await authorization(page, 'root', 'root');
     });
     
     
@@ -551,9 +549,7 @@ test.describe("Tests with created layout", () => {
         let deleteCreatedLayouts = Configuration.layouts.filter(item => item.meta.layout_id != stableLayout);
         await layoutAnnihilator(deleteCreatedLayouts);
         await page.goto(currentURL);
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
+        await authorization(page, 'root', 'root');
     });
 
     test('Check positions in menu (CLOUD-T350)', async ({ page }) => {
@@ -1258,9 +1254,7 @@ test.describe("Tests with different users", () => {
         await configurationCollector("layouts");
         await layoutAnnihilator("all");
         await page.goto(currentURL);
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
+        await authorization(page, 'root', 'root');
     });
 
     test('Full layout sharing (CLOUD-T410)', async ({ page }) => {
@@ -1307,11 +1301,8 @@ test.describe("Tests with different users", () => {
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем Layout User
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('Layout User');
-        await page.getByLabel('Password').fill('Admin1234');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'Layout User', 'Admin1234');
         //Раскладка не всегда успевает создасться у пользователя, поэтому иногда приходится перезагружаться
         let layoutRequest = await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         let body = await layoutRequest.json();
@@ -1378,11 +1369,8 @@ test.describe("Tests with different users", () => {
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем Layout User
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('Layout User');
-        await page.getByLabel('Password').fill('Admin1234');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'Layout User', 'Admin1234');
         //Раскладка не всегда успевает создасться у пользователя, поэтому иногда приходится перезагружаться
         let layoutRequest = await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         let body = await layoutRequest.json();
@@ -1440,11 +1428,8 @@ test.describe("Tests with different users", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Авторизуемся пользователем Layout User
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('Layout User');
-        await page.getByLabel('Password').fill('Admin1234');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'Layout User', 'Admin1234');
         //Раскладка не всегда успевает создасться у пользователя, поэтому иногда приходится перезагружаться
         let layoutRequest = await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         let body = await layoutRequest.json();
@@ -1495,11 +1480,8 @@ test.describe("Tests with different users", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Авторизуемся пользователем Layout User
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('Layout User');
-        await page.getByLabel('Password').fill('Admin1234');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'Layout User', 'Admin1234');
         //Раскладка не всегда успевает создасться у пользователя, поэтому иногда приходится перезагружаться
         let layoutRequest = await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         let body = await layoutRequest.json();
@@ -1524,11 +1506,8 @@ test.describe("Tests with different users", () => {
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем root
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'root', 'root');
         //Ждем запрос раскладок и проверяем их количество
         layoutRequest = await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         expect(await page.locator('#at-layout-items li').count()).toEqual(1);
@@ -1544,11 +1523,8 @@ test.describe("Tests with different users", () => {
         
         // await page.pause();
         //Авторизуемся пользователем Layout User
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('Layout User');
-        await page.getByLabel('Password').fill('Admin1234');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'Layout User', 'Admin1234');
         //Создаем полную x4 раскладку в UI
         await page.locator('#at-layout-menu').click();
         await page.locator('[title="2\u00D72"]').click();
@@ -1574,11 +1550,8 @@ test.describe("Tests with different users", () => {
         // await page.pause();
         await setRolePermissions("Layouts", layoutForbid);
         //Авторизуемся пользователем Layout User
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('Layout User');
-        await page.getByLabel('Password').fill('Admin1234');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, 'Layout User', 'Admin1234');
         //Проверяем количество раскладок
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
         expect(await page.locator('#at-layout-items li').count()).toEqual(0);

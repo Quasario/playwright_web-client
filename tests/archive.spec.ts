@@ -38,7 +38,7 @@ test.describe("Common block", () => {
     
     
     test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
-        
+        await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
         const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());

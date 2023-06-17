@@ -11,16 +11,32 @@ import { getArchiveList } from "../grpc_api/archives";
 
 
 export async function authorization(page: Page, userName: string, userPassword: string) {
-    await page.goto(currentURL);
     await page.getByLabel('Login').fill(userName);
     await page.getByLabel('Password').fill(userPassword);
     await page.getByLabel('Password').press('Enter');
+};
+
+export async function logout(page: Page) {
+    await page.locator('#at-top-menu-btn').click();
+    await page.getByRole('menuitem', { name: 'Change user' }).click();
 };
 
 export async function isCameraListOpen(page: Page) {
     await page.waitForTimeout(500); //list close/open animation timeout
     let isVisible = await page.locator('.camera-list [type="checkbox"]').last().isVisible(); //favorite button is visible
     return isVisible;
+};
+
+export async function openCameraList(page: Page) {
+    await waitAnimationEnds(page.locator('.camera-list'));
+    let panelSize = await page.locator('.camera-list').boundingBox();
+    console.log(panelSize);
+    if (panelSize!.width < 100) {
+        await page.getByRole('button', { name: 'Hardware'}).click();
+    };
+    await page.waitForTimeout(3000);
+    panelSize = await page.locator('.camera-list').boundingBox();
+    console.log(panelSize);
 };
 
 export async function getCameraList() {

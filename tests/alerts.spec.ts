@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds, timeToSeconds } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds, timeToSeconds, authorization } from "../utils/utils.js";
 
 
 test.describe("Common block", () => {
@@ -34,9 +34,7 @@ test.describe("Common block", () => {
     
     test.beforeEach(async ({ page }) => {
         await page.goto(currentURL);
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
+        await authorization(page, "root", "root");
     });
     
     

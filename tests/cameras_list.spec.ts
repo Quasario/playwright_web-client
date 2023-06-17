@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, authorization, logout } from "../utils/utils.js";
 
 
 test.describe("Common block", () => {
@@ -42,10 +42,7 @@ test.describe("Common block", () => {
     
     test.beforeEach(async ({ page }) => {
         await page.goto(currentURL);
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
-        // await page.pause();
+        await authorization(page, "root", "root");
         await page.locator('#at-top-menu-btn').click();
         await page.getByRole('menuitem', { name: 'Preferences' }).click();
         await page.getByLabel('Show only live cameras').uncheck();
@@ -56,11 +53,8 @@ test.describe("Common block", () => {
     test('Camera list without layouts (CLOUD-T113)', async ({ page }) => {
         // await page.pause();
         //Авторизация юзером без раскладок
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('User_1');
-        await page.getByLabel('Password').fill('123');
-        await page.getByLabel('Password').press('Enter');
+        await logout(page);
+        await authorization(page, "User_1", "123");
         //Проверяем что камеры на месте
         await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: '2.Camera', exact: true })).toBeVisible();
@@ -507,9 +501,7 @@ test.describe("Searching block", () => {
 
     test.beforeEach(async ({ page }) => {
         await page.goto(currentURL);
-        await page.getByLabel('Login').fill('root');
-        await page.getByLabel('Password').fill('root');
-        await page.getByLabel('Password').press('Enter');
+        await authorization(page, "root", "root");
         // await page.pause();
         await page.locator('#at-top-menu-btn').click();
         await page.getByRole('menuitem', { name: 'Preferences' }).click();
@@ -874,12 +866,9 @@ test.describe("Searching block", () => {
         }
     
         await setRolePermissions("New_Role", userWithoutGroupPanel);
-    
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('User_1');
-        await page.getByLabel('Password').fill('123');
-        await page.getByLabel('Password').press('Enter');
+        
+        await logout(page);
+        await authorization(page, "User_1", "123");
     
         await expect(page.locator('[id="at-groups-list"]')).toBeHidden();
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('2.Device', { ignoreCase: false });
@@ -893,12 +882,9 @@ test.describe("Searching block", () => {
         // await page.pause();
         lastTest = true;
         await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[6].accessPoint, Configuration.cameras[7].accessPoint], "CAMERA_ACCESS_FORBID");
-    
-        await page.locator('#at-top-menu-btn').click();
-        await page.getByRole('menuitem', { name: 'Change user' }).click();
-        await page.getByLabel('Login').fill('User_1');
-        await page.getByLabel('Password').fill('123');
-        await page.getByLabel('Password').press('Enter');
+        
+        await logout(page);
+        await authorization(page, "User_1", "123");
         
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(0)).toHaveText('4.221B Baker Street', { ignoreCase: false });
         await expect(page.locator('[data-testid="at-camera-list-item"]').nth(3)).toHaveText('A.Camera', { ignoreCase: false });
