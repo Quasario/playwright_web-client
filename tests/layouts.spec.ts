@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds, authorization, logout } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds, authorization, logout, openCameraList } from "../utils/utils.js";
 
 //Список названий/ID камер в конфигурации
 let cameras: any;
@@ -55,7 +55,7 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек в созданной раскладке
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(1);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
         //Проверяем имя созданной раскладки
         await expect(page.locator('#at-layout-item-0')).toContainText("New Layout");
         //Проверяем название и разрешение камеры
@@ -81,9 +81,9 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек в созданной раскладке
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         //Проверяем имя созданной раскладки
-        await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+        await expect(page.locator('#at-layout-item-0')).toContainText("New Layout");
         //Проверяем названия и разрешения камер
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toHaveText(`${cameras[1].id}.${cameras[1].name}`);
@@ -112,9 +112,9 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек в созданной раскладке
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(9);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(9);
         //Проверяем имя созданной раскладки
-        await expect (page.locator('#at-layout-item-0')).toContainText("New Layout");
+        await expect(page.locator('#at-layout-item-0')).toContainText("New Layout");
         //Проверяем названия и разрешения камер по диагонали
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(4)).toHaveText(`${cameras[4].id}.${cameras[4].name}`);
@@ -142,7 +142,7 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек в созданной раскладке
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(16);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(16);
         //Проверяем имя созданной раскладки
         await expect(page.locator('#at-layout-item-0')).toContainText("New Layout");
         //Проверяем названия и разрешения камер по диагонали
@@ -192,7 +192,7 @@ test.describe("Tests without created layout", () => {
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -233,7 +233,7 @@ test.describe("Tests without created layout", () => {
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -244,7 +244,7 @@ test.describe("Tests without created layout", () => {
         await page.locator('#at-layout-menu').click();
         await page.locator('[title="1\u00D71"]').click();
         //В момент создания раскладки есть некая анимация, если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
-        await page.waitForTimeout(500);
+        await waitAnimationEnds(page, page.locator('.layout'));
         //Добавляем два столбца справа
         await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
         await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
@@ -257,20 +257,15 @@ test.describe("Tests without created layout", () => {
         await expect(page.locator('[role="gridcell"][tabindex="4"] h6')).toHaveText("Drag camera here");
         await expect(page.locator('[role="gridcell"][tabindex="5"] h6')).toHaveText("Drag camera here");
     
-        //Проверяем открыта ли панель с камерами, и открываем если нет
-        if (!(await isCameraListOpen(page))) {
-            await page.getByRole('button', { name: 'Hardware'}).click();
-        }
+        //Открываем панель с камерами
+        await openCameraList(page);
     
         //Получаем координаты ячейки 3, чтобы потом перетащить туда камеру
-        let cell;
-        if (await isCameraListOpen(page)){
-            cell = await page.locator('[role="gridcell"][tabindex="2"]').boundingBox();
-            if (cell === null) {
-                test.fail();
-            }
+        let cell = await page.locator('[role="gridcell"][tabindex="2"]').boundingBox();
+        if (cell === null) {
+            test.fail();
         }
-    
+        
         //Перетаскиваем вторую камеру из списка в ячейку 3
         await page.locator('[data-testid="at-camera-list-item"]').nth(1).hover();
         await page.mouse.down();
@@ -280,12 +275,12 @@ test.describe("Tests without created layout", () => {
         await expect (page.locator('[role="gridcell"][tabindex="2"] h6')).toBeHidden();
         //Жмем на кнопку очистки
         await page.getByRole('button', { name: 'Clean up'}).click();
-        expect(await page.locator('[role="gridcell"]').count()).toEqual(2);
+        await expect(page.locator('[role="gridcell"]')).toHaveCount(2);
         //Сохраняем раскладку
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -295,7 +290,7 @@ test.describe("Tests without created layout", () => {
         await page.locator('#at-layout-menu').click();
         await page.locator('[title="3\u00D73"]').click();
         //В момент создания раскладки есть некая анимация, если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
-        await page.waitForTimeout(500);
+        await waitAnimationEnds(page, page.locator('.layout'));
         //Удаляем две ячейки
         await page.locator('[role="gridcell"][tabindex="2"]').hover();
         await page.locator('[role="gridcell"][tabindex="2"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
@@ -341,7 +336,7 @@ test.describe("Tests without created layout", () => {
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(7);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(7);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -350,8 +345,8 @@ test.describe("Tests without created layout", () => {
         // await page.pause();
         await page.locator('#at-layout-menu').click();
         await page.locator('[title="3\u00D73"]').click();
-        //В момент создания раскладки есть некая анимация, если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
-        await page.waitForTimeout(500);
+        //В момент создания раскладки есть анимация, и если ее не дождаться и сразу начать добавлять ячейки, то боковые панели съезжают
+        await waitAnimationEnds(page, page.locator('.layout'));
         //Добавляем столбец справа
         await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
         //Удаляем две ячейки
@@ -360,25 +355,22 @@ test.describe("Tests without created layout", () => {
         await page.locator('[role="gridcell"][tabindex="5"]').hover();
         await page.locator('[role="gridcell"][tabindex="5"] button').last().click();
     
-        //Проверяем открыта ли панель с камерами, и открываем если нет
-        if (!(await isCameraListOpen(page))) {
-            await page.getByRole('button', { name: 'Hardware'}).click();
-        }
+        //Открываем панель с камерами
+        await openCameraList(page);
     
         //Получаем координаты ячеек для добавляения, чтобы потом перетащить туда камеры
         let cellIDs = [2, 5, 9, 10, 11];
         let cellsCoorinates = Array();
-        if (await isCameraListOpen(page)){
-            for (let cameraId of cellIDs) {
-                let coordinates = await page.locator(`[role="gridcell"][tabindex="${cameraId}"]`).boundingBox();
-                if (coordinates === null) {
-                    test.fail();
-                } else {
-                    cellsCoorinates.push(coordinates);
-                }
+        
+        for (let cameraId of cellIDs) {
+            let coordinates = await page.locator(`[role="gridcell"][tabindex="${cameraId}"]`).boundingBox();
+            if (coordinates === null) {
+                test.fail();
+            } else {
+                cellsCoorinates.push(coordinates);
             }
         }
-    
+        
         //Добавляем камеры в ячейки
         for (let i = 9; i < 14; i++) {
             await page.locator('[data-testid="at-camera-list-item"]').nth(i).hover();
@@ -396,7 +388,7 @@ test.describe("Tests without created layout", () => {
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(12);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(12);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -514,7 +506,7 @@ test.describe("Tests without created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек на раскладке, названия и разрешения камер
-        expect(await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toHaveText(`${cameras[0].id}.${cameras[0].name}`);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toHaveText(`${cameras[1].id}.${cameras[1].name}`);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toHaveText(`${cameras[2].id}.${cameras[2].name}`);
@@ -570,7 +562,8 @@ test.describe("Tests with created layout", () => {
         await page.keyboard.press('Escape');
         //Проверяем пункты в меню GUI раскладки
         await page.locator('#at-layout-expand').click();
-        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        //Таймаут анимации так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-1').click({force: true});
         await page.locator('#at-layout-menu').click();
         await expect (page.locator('[tabindex="-1"][role="menuitem"]').nth(1)).toHaveText('Delete/Reorder layouts');
@@ -598,10 +591,11 @@ test.describe("Tests with created layout", () => {
         await requestPromise;
         //Назначаем раскладку 3 дефолтной
         await page.locator('#at-layout-expand').click();
-        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        //Таймаут анимации так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-2').click({force: true});
         await page.locator('[data-testid="at-camera-title"]').nth(0).waitFor({state: 'attached', timeout: 5000});
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect (page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Use by default', exact: true }).click();
         //Проверяем что появилась иконка
@@ -612,16 +606,17 @@ test.describe("Tests with created layout", () => {
         //Перезагружаем страницу и проверяем, что открылась нужная раскладка (по количеству камер) и что иконка дефолтности висит на раскладке 3
         await page.reload();
         await page.locator('[data-testid="at-camera-title"]').nth(0).waitFor({state: 'attached', timeout: 5000});
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect (page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         await page.locator('#at-layout-expand').click();
         await expect (page.locator('#at-layout-item-0 svg').nth(0)).toBeHidden();
         await expect (page.locator('#at-layout-item-1 svg').nth(0)).toBeHidden();
         await expect (page.locator('#at-layout-item-2 svg').nth(0)).toBeVisible();
         //Назначаем раскладку 2 дефолтной
-        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        //Таймаут анимации так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-1').click({force: true});
         await page.locator('[data-testid="at-camera-title"]').nth(0).waitFor({state: 'attached', timeout: 5000});
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(9);
+        await expect (page.locator('[data-testid="at-camera-title"]')).toHaveCount(9);
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Use by default', exact: true }).click();
         await page.locator('#at-layout-expand').click();
@@ -632,7 +627,7 @@ test.describe("Tests with created layout", () => {
         //Перезагружаем страницу и проверяем, что открылась нужная раскладка (по количеству камер) и что иконка дефолтности висит на раскладке 2
         await page.reload();
         await page.locator('[data-testid="at-camera-title"]').nth(0).waitFor({state: 'attached', timeout: 5000});
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(9);
+        await expect (page.locator('[data-testid="at-camera-title"]')).toHaveCount(9);
         await page.locator('#at-layout-expand').click();
         await expect (page.locator('#at-layout-item-0 svg').nth(0)).toBeHidden();
         await expect (page.locator('#at-layout-item-1 svg').nth(0)).toBeVisible();
@@ -648,7 +643,7 @@ test.describe("Tests with created layout", () => {
         //Перезагружаем страницу и проверяем что открылась первая раскладка
         await page.reload();
         await page.locator('[data-testid="at-camera-title"]').nth(0).waitFor({state: 'attached', timeout: 5000});
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(1);
+        await expect (page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -662,7 +657,7 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек в созданной раскладке
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         //Проверяем имя созданной раскладки
         await expect (page.locator('#at-layout-item-0')).toHaveText("Test Layout copy");
         //Создаем копию копии
@@ -672,7 +667,7 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество ячеек в созданной раскладке
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         //Проверяем имя созданной раскладки
         await expect (page.locator('#at-layout-item-0')).toHaveText("Test Layout copy 1");
         //Проверяем что веб-клиент не упал
@@ -711,7 +706,7 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество активных ячеек
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(5);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(5);
         //Проверяем что в новых ячейках нужные камеры
         await expect (page.locator('[role="gridcell"][tabindex="4"]')).toContainText(`${cameras[9].id}.${cameras[9].name}`);
         await expect (page.locator('[role="gridcell"][tabindex="5"]')).toContainText(`${cameras[10].id}.${cameras[10].name}`);
@@ -750,7 +745,8 @@ test.describe("Tests with created layout", () => {
         await page.locator('[role="gridcell"][tabindex="1"] button').last().click(); // СДЕЛАТЬ ЛОКАТОРЫ
         //Выбираем раскладку x1
         await page.locator('#at-layout-expand').click();
-        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        //Таймаут анимации так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-1').click({force: true, position: {x:10, y:10}}); //Костыль с координатами так как forse флаг жмет на центр блока минуя видимость и промахивается
         //Добавляем столбец справа и камеру туда
         await page.locator('.layout > div:last-child > button').nth(2).click(); // СДЕЛАТЬ ЛОКАТОРЫ
@@ -763,16 +759,17 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверяем количество активных ячеек
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(2);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
         //Проверяем что в новой ячейке нужная камера
         await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText(`${cameras[7].id}.${cameras[7].name}`);
         //Выбираем раскладку x4
         await page.locator('#at-layout-expand').click();
-        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        //Таймаут анимации так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-0').click({force: true});
         //Проверям количество ячеек
         await page.locator('[role="gridcell"][tabindex="3"]').waitFor({state: 'attached', timeout: 5000});
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(3);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(3);
         //Проверяем потоки измененных ячеек
         await expect (page.locator('[role="gridcell"][tabindex="2"]')).toContainText("High");
         await expect (page.locator('[role="gridcell"][tabindex="3"]')).toContainText("Low");
@@ -801,7 +798,8 @@ test.describe("Tests with created layout", () => {
         await expect(page.locator('#at-layout-item-0')).toHaveText('Red Square');
         //Мееяем название второй раскладки
         await page.locator('#at-layout-expand').click();
-        await page.waitForTimeout(1000); //Таймаут нужен так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        //Таймаут анимации так как ниже при клике игнорируется видимость элемента через флаг forсe, это нужно так как элемент aria-disabled="true"
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-1').dblclick({force: true});
         await page.locator('#at-layout-item-1 input').type(' Changed');
         requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
@@ -819,7 +817,7 @@ test.describe("Tests with created layout", () => {
         await page.reload();
         //Активируем поле изменения названия
         await page.locator('#at-layout-item-0').dblclick({force: true});
-        await waitAnimationEnds(page.locator('#at-layout-items')); 
+        await waitAnimationEnds(page, page.locator('#at-layout-items')); 
         let inputSize = await page.locator('#at-layout-item-0 input').boundingBox();
         //Удаляем первую часть слова и пишем Changed
         await page.mouse.click(inputSize!.x + 25,  inputSize!.y + inputSize!.height / 2);
@@ -845,7 +843,7 @@ test.describe("Tests with created layout", () => {
         await page.reload();
         //Активируем поле изменения названия
         await page.locator('#at-layout-item-0').dblclick({force: true});
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Не меняя названия раскладки кликаем в пространство вне меню (в данно случае в середину экрана, так как #app это обобщающий блок)
         let viewCenter = await page.locator('#app').boundingBox();
         await page.mouse.click(viewCenter!.x + viewCenter!.width / 2,  viewCenter!.y + viewCenter!.height / 2);
@@ -855,7 +853,7 @@ test.describe("Tests with created layout", () => {
         await expect(page.locator('#at-layout-item-0 input')).toBeHidden();
         //Снова активируем поле изменения названия
         await page.locator('#at-layout-item-0').dblclick({force: true});
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Меняем название раскладки и кликаем в пространство вне меню
         await page.locator('#at-layout-item-0 input').fill('Sergeant Billy', {force: true});
         await page.mouse.click(viewCenter!.x + viewCenter!.width / 2,  viewCenter!.y + viewCenter!.height / 2);
@@ -880,7 +878,7 @@ test.describe("Tests with created layout", () => {
         await expect(page.locator('#at-layout-item-4')).toBeInViewport();
         //Кликаем по последней раскладке ждем пока блок свернется и проверяем, что раскладка отображается в визуальной области, то есть список пролистался до нее
         await page.locator('#at-layout-item-4').click({force: true});
-        await page.waitForTimeout(500); //таймаут анимации панели
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await expect(page.locator('#at-layout-item-4')).toBeInViewport();
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
@@ -951,7 +949,7 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
         //Разворачиваем панель раскладок
         await page.locator('#at-layout-expand').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Получаем координаты второй раскладки в панели
         let firstLayout = await page.locator('#at-layout-item-0').boundingBox();
         //Перетаскиваем вторую раскладку на место первой
@@ -959,7 +957,7 @@ test.describe("Tests with created layout", () => {
         await page.mouse.down();
         await page.mouse.move(firstLayout!.x + firstLayout!.width / 2, firstLayout!.y + firstLayout!.height / 2);
         await page.mouse.up();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Сохраняем изменения
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -1008,20 +1006,20 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
         //Удаялем первую раскладку не разворачивая блок с раскладками
         await page.locator('#at-layout-item-0 button:last-child').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(2);
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        await expect(page.locator('#at-layout-items li')).toHaveCount(2);
         //Разворачиваем панель раскладок и удаляем вторую добавленную раскладку
         await page.locator('#at-layout-expand').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-0 button:last-child').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        await expect(page.locator('#at-layout-items li')).toHaveCount(1);
         //Сохраняем изменения
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверям количество и названия раскладок
-        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        await expect(page.locator('#at-layout-items li')).toHaveCount(1);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
@@ -1037,13 +1035,13 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
         //Разворачиваем панель раскладок и удаляем две раскладки добавленную раскладку
         await page.locator('#at-layout-expand').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         await page.locator('#at-layout-item-0 button:last-child').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(2);
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        await expect(page.locator('#at-layout-items li')).toHaveCount(2);
         await page.locator('#at-layout-item-0 button:last-child').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        await expect(page.locator('#at-layout-items li')).toHaveCount(1);
         //Слушаем запросы, чтобы при отмене не отсылался запрос на изменение раскладки
         let requestNotSent = true;
         page.on("request", request => {
@@ -1054,7 +1052,7 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('button', { name: 'Cancel', exact: true }).click();
         //Проверям количество и названия раскладок
         await page.locator('#at-layout-item-2').waitFor({state: 'attached', timeout: 5000});
-        expect(await page.locator('#at-layout-items li').count()).toEqual(3);
+        await expect(page.locator('#at-layout-items li')).toHaveCount(3);
         await expect(page.locator('#at-layout-item-0')).toHaveText('Test Layout 3');
         await expect(page.locator('#at-layout-item-1')).toHaveText('Test Layout 2');
         //Проверяем, что запрос на раскладки не был отправлен
@@ -1074,7 +1072,7 @@ test.describe("Tests with created layout", () => {
         await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
         //Разворачиваем панель раскладок
         await page.locator('#at-layout-expand').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Получаем координаты второй раскладки в панели
         let firstLayout = await page.locator('#at-layout-item-0').boundingBox();
         //Перетаскиваем вторую раскладку на место первой
@@ -1082,7 +1080,7 @@ test.describe("Tests with created layout", () => {
         await page.mouse.down();
         await page.mouse.move(firstLayout!.x + firstLayout!.width / 2, firstLayout!.y + firstLayout!.height / 2);
         await page.mouse.up();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Слушаем запросы, чтобы при отмене не отсылался запрос на изменение раскладки
         let requestNotSent = true;
         page.on("request", request => {
@@ -1130,7 +1128,7 @@ test.describe("Tests with created layout", () => {
         });
         await page.getByRole('button', { name: 'Cancel', exact: true }).click();
         //Проверяем количество активных ячеек
-        expect (await page.locator('[data-testid="at-camera-title"]').count()).toEqual(4);
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         //Проверяем потоки ячеек
         await expect (page.locator('[role="gridcell"][tabindex="0"]')).toContainText("Auto");
         await expect (page.locator('[role="gridcell"][tabindex="1"]')).toContainText("Auto");
@@ -1286,7 +1284,7 @@ test.describe("Tests with different users", () => {
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
         //Получаем координаты кнопки Save, понадобится чтобы закрыть меню раскладки
-        await waitAnimationEnds(page.locator('header [role="group"]'));
+        await waitAnimationEnds(page, page.locator('header [role="group"]'));
         let saveButton = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
         //Раздаем раскладку роли Layouts
         await page.locator('#at-layout-menu').click();
@@ -1354,7 +1352,7 @@ test.describe("Tests with different users", () => {
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
         //Получаем координаты кнопки Save, понадобится чтобы закрыть меню раскладки
-        await waitAnimationEnds(page.locator('header [role="group"]'));
+        await waitAnimationEnds(page, page.locator('header [role="group"]'));
         let saveButton = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
         //Раздаем раскладку роли Layouts
         await page.locator('#at-layout-menu').click();
@@ -1415,7 +1413,7 @@ test.describe("Tests with different users", () => {
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
         //Получаем координаты кнопки Save, понадобится чтобы закрыть меню раскладки
-        await waitAnimationEnds(page.locator('header [role="group"]'));
+        await waitAnimationEnds(page, page.locator('header [role="group"]'));
         let saveButton = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
         //Раздаем раскладку роли Layouts
         await page.locator('#at-layout-menu').click();
@@ -1467,7 +1465,7 @@ test.describe("Tests with different users", () => {
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Edit layout', exact: true }).click();
         //Получаем координаты кнопки Save, понадобится чтобы закрыть меню раскладки
-        await waitAnimationEnds(page.locator('header [role="group"]'));
+        await waitAnimationEnds(page, page.locator('header [role="group"]'));
         let saveButton = await page.getByRole('button', { name: 'Save', exact: true }).boundingBox();
         //Раздаем раскладку роли Layouts
         await page.locator('#at-layout-menu').click();
@@ -1495,14 +1493,14 @@ test.describe("Tests with different users", () => {
         await page.locator('#at-layout-menu').click();
         await page.getByRole('menuitem', { name: 'Delete/Reorder layouts', exact: true }).click();
         await page.locator('#at-layout-item-0 button:last-child').click();
-        await waitAnimationEnds(page.locator('#at-layout-items'));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(0);
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        await expect(page.locator('#at-layout-items li')).toHaveCount(0);
         //Сохраняем изменения
         requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
         await page.getByRole('button', { name: 'Save', exact: true }).click();
         await requestPromise;
         //Проверям количество раскладок
-        expect(await page.locator('#at-layout-items li').count()).toEqual(0);
+        await expect(page.locator('#at-layout-items li')).toHaveCount(0);
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
         //Авторизуемся пользователем root
@@ -1510,7 +1508,7 @@ test.describe("Tests with different users", () => {
         await authorization(page, 'root', 'root');
         //Ждем запрос раскладок и проверяем их количество
         layoutRequest = await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        await expect(page.locator('#at-layout-items li')).toHaveCount(1);
         //Проверяем видео в них
         for (let i = 0; i < 4; i++) {
             await expect(page.locator(`[role="gridcell"][tabindex="${i}"] video`)).toBeVisible();
@@ -1535,8 +1533,8 @@ test.describe("Tests with different users", () => {
         await setRolePermissions("Layouts", layoutChangingForbid);
         //Проверяем количество раскладок
         await page.reload();
-        await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
-        expect(await page.locator('#at-layout-items li').count()).toEqual(1);
+        await page.waitForResponse(request => request.url().includes(`/v1/layouts?`));  
+        await expect(page.locator('#at-layout-items li')).toHaveCount(1);
         //Проверяем пункты в меню раскладки
         await page.locator('#at-layout-menu').click();
         await expect(page.locator('[role="menu"]').last().locator('li')).toHaveCount(1);//сделать локатор для меню раскладок
@@ -1554,7 +1552,7 @@ test.describe("Tests with different users", () => {
         await authorization(page, 'Layout User', 'Admin1234');
         //Проверяем количество раскладок
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
-        expect(await page.locator('#at-layout-items li').count()).toEqual(0);
+        await expect(page.locator('#at-layout-items li')).toHaveCount(0);
         //Проверяем что меню раскладок скрыто
         await expect(page.locator('#at-layout-menu')).toBeHidden();
         //Проверяем что веб-клиент не упал

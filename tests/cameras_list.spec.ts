@@ -75,7 +75,7 @@ test.describe("Common block", () => {
     });
     
     
-    test.only('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
+    test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
         // await page.pause();
         // await page.getByRole('button', { name: 'Hardware' }).click();
         await openCameraList(page);

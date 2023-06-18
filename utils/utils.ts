@@ -31,26 +31,20 @@ export async function openCameraList(page: Page) {
     // await page.waitForTimeout(500);
     await waitAnimationEnds(page, page.getByRole('button', { name: 'Hardware'}));
     let panelSize = await page.locator('.camera-list').boundingBox();
-    console.log(panelSize);
+    // console.log(panelSize);
     if (panelSize!.width < 50) {
         await page.getByRole('button', { name: 'Hardware'}).click();
     };
-    // await page.waitForTimeout(3000);
-    // panelSize = await page.locator('.camera-list').boundingBox();
-    // console.log("delay " + panelSize?.width);
 };
 
 export async function closeCameraList(page: Page) {
     // await page.waitForTimeout(500);
     await waitAnimationEnds(page, page.getByRole('button', { name: 'Hardware'}));
     let panelSize = await page.locator('.camera-list').boundingBox();
-    console.log(panelSize);
+    // console.log(panelSize);
     if (panelSize!.width > 50) {
         await page.getByRole('button', { name: 'Hardware'}).click();
     };
-    // await page.waitForTimeout(3000);
-    // panelSize = await page.locator('.camera-list').boundingBox();
-    // console.log("delay " + panelSize?.width);
 };
 
 export async function getCameraList() {
@@ -227,10 +221,16 @@ export function getIdByRoleName(roleName: string) {
 export async function waitAnimationEnds(page: Page, locator: Locator) {
     // await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.finished)));
     let anime = await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.playState)));
+    let i = 0;
     while (anime.length != 0) {
+        i++;
         await page.waitForTimeout(100);
         anime = await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.playState)));
-        // console.log(anime);
+        console.log(`${anime.length} animations is processing`);
+
+        if (i > 50) {
+            test.fail();
+        }
     }
 }
 
