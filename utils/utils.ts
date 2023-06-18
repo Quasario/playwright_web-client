@@ -28,15 +28,29 @@ export async function isCameraListOpen(page: Page) {
 };
 
 export async function openCameraList(page: Page) {
-    await waitAnimationEnds(page.locator('.camera-list'));
+    // await page.waitForTimeout(500);
+    await waitAnimationEnds(page, page.getByRole('button', { name: 'Hardware'}));
     let panelSize = await page.locator('.camera-list').boundingBox();
     console.log(panelSize);
-    if (panelSize!.width < 100) {
+    if (panelSize!.width < 50) {
         await page.getByRole('button', { name: 'Hardware'}).click();
     };
-    await page.waitForTimeout(3000);
-    panelSize = await page.locator('.camera-list').boundingBox();
+    // await page.waitForTimeout(3000);
+    // panelSize = await page.locator('.camera-list').boundingBox();
+    // console.log("delay " + panelSize?.width);
+};
+
+export async function closeCameraList(page: Page) {
+    // await page.waitForTimeout(500);
+    await waitAnimationEnds(page, page.getByRole('button', { name: 'Hardware'}));
+    let panelSize = await page.locator('.camera-list').boundingBox();
     console.log(panelSize);
+    if (panelSize!.width > 50) {
+        await page.getByRole('button', { name: 'Hardware'}).click();
+    };
+    // await page.waitForTimeout(3000);
+    // panelSize = await page.locator('.camera-list').boundingBox();
+    // console.log("delay " + panelSize?.width);
 };
 
 export async function getCameraList() {
@@ -210,8 +224,14 @@ export function getIdByRoleName(roleName: string) {
     }
 };
 
-export async function waitAnimationEnds(locator: Locator) {
-    await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.finished)));
+export async function waitAnimationEnds(page: Page, locator: Locator) {
+    // await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.finished)));
+    let anime = await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.playState)));
+    while (anime.length != 0) {
+        await page.waitForTimeout(100);
+        anime = await locator.evaluate(e => Promise.all(e.getAnimations({ subtree: true }).map(animation => animation.playState)));
+        // console.log(anime);
+    }
 }
 
 export function timeToSeconds(time: string, accurancy = 0) {

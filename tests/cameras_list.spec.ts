@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, authorization, logout } from "../utils/utils.js";
+import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, authorization, logout, openCameraList } from "../utils/utils.js";
 
 
 test.describe("Common block", () => {
@@ -75,9 +75,10 @@ test.describe("Common block", () => {
     });
     
     
-    test('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
+    test.only('Camera list with layouts (CLOUD-T121)', async ({ page }) => {
         // await page.pause();
-        await page.getByRole('button', { name: 'Hardware' }).click();
+        // await page.getByRole('button', { name: 'Hardware' }).click();
+        await openCameraList(page);
         //Проверяем что камеры на месте
         await expect(page.getByRole('button', { name: '1.Camera', exact: true })).toBeVisible();
         await expect(page.getByRole('button', { name: '2.Camera', exact: true })).toBeVisible();
