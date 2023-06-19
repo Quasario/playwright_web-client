@@ -236,5 +236,5 @@ export async function waitAnimationEnds(page: Page, locator: Locator) {
 
 export function timeToSeconds(time: string, accurancy = 0) {
     let timeArr = time.split(':');
-    return (Number(timeArr[0])*24*60 + Number(timeArr[1])*60 + Number(timeArr[2]) + Number(accurancy));
+    return (Number(timeArr[0])*60*60 + Number(timeArr[1])*60 + Number(timeArr[2]) + Number(accurancy));
 }
