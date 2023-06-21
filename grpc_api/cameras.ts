@@ -167,8 +167,8 @@ export async function changeSingleCameraActiveStatus(cameraEndpoint: string, boo
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${cameraEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
-    } else console.log(`Error: Camera (${cameraEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera "${cameraEndpoint}" was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera "${cameraEndpoint}" coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
 
     await configurationCollector("cameras");
 };
@@ -206,8 +206,8 @@ export async function changeSingleCameraID(cameraEndpoint: string, newID: string
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${cameraEndpoint}) friendly ID was changed to "${newID}".`.green);
-    } else console.log(`Error: Camera (${cameraEndpoint}) friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera "${cameraEndpoint}" friendly ID was changed to "${newID}".`.green);
+    } else console.log(`Error: Camera "${cameraEndpoint}" friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
 
     await configurationCollector("cameras");
 };
@@ -245,8 +245,8 @@ export async function changeSingleCameraName(cameraEndpoint: string, newName: st
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${cameraEndpoint}) name was changed to "${newName}".`.green);
-    } else console.log(`Error: Camera (${cameraEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera "${cameraEndpoint}" name was changed to "${newName}".`.green);
+    } else console.log(`Error: Camera "${cameraEndpoint}" name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
 
     await configurationCollector("cameras");
 };
@@ -284,8 +284,8 @@ export async function changeIPServerCameraActiveStatus(videoChannelEndpoint: str
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${videoChannelEndpoint}) was ${bool ? "enabled" : "disabled"}.`.green);
-    } else console.log(`Error: Camera (${videoChannelEndpoint}) coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera "${videoChannelEndpoint}" was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera "${videoChannelEndpoint}" coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
 
     await configurationCollector("cameras");
 };
@@ -323,8 +323,8 @@ export async function changeIPServerCameraID(videoChannelEndpoint: string, newID
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${videoChannelEndpoint}) friendly ID was changed to "${newID}".`.green);
-    } else console.log(`Error: Camera (${videoChannelEndpoint}) friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera "${videoChannelEndpoint}" friendly ID was changed to "${newID}".`.green);
+    } else console.log(`Error: Camera "${videoChannelEndpoint}" friendly ID coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
 
     await configurationCollector("cameras");
 };
@@ -362,8 +362,8 @@ export async function changeIPServerCameraName(videoChannelEndpoint: string, new
     let response = await request.json();
 
     if (request.ok && !response.failed.length) {
-        console.log(`Camera (${videoChannelEndpoint}) name was changed to "${newName}".`.green);
-    } else console.log(`Error: Camera (${videoChannelEndpoint}) name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Camera "${videoChannelEndpoint}" name was changed to "${newName}".`.green);
+    } else console.log(`Error: Camera "${videoChannelEndpoint}" name coudn't change. Code: ${request.status}, Failed: ${response.failed}`.red);
 
     await configurationCollector("cameras");
 };
@@ -420,10 +420,10 @@ export async function addVirtualVideo(camerasList: { [key: string]: any, "videoc
     });
 
     let response = await request.json();
-    
+    let nameList = camerasList.map(item => `${item.displayId}.${item.displayName}`);
     if (request.ok && !response.failed.length) {
-        console.log(`Videos (${highStreamVideo}/${lowStreamVideo}) was added to cameras ${camerasList[0].videochannelID} - ${camerasList[camerasList.length - 1].videochannelID}.`.green);
-    } else console.log(`Error: Coudn't add video to cameras ${camerasList[0].videochannelID} - ${camerasList[camerasList.length - 1].videochannelID}. Code: ${request.status}, Failed: ${response.failed}`.red);
+        console.log(`Videos ${highStreamVideo} / ${lowStreamVideo} was added to cameras ${nameList.toString()}.`.green);
+    } else console.log(`Error: Coudn't add video to cameras ${nameList.toString()}. Code: ${request.status}, Failed: ${response.failed}`.red);
 
 };
 

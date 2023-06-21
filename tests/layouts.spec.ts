@@ -950,13 +950,10 @@ test.describe("Tests with created layout", () => {
         //Разворачиваем панель раскладок
         await page.locator('#at-layout-expand').click();
         await waitAnimationEnds(page, page.locator('#at-layout-items'));
-        //Получаем координаты второй раскладки в панели
-        let firstLayout = await page.locator('#at-layout-item-0').boundingBox();
         //Перетаскиваем вторую раскладку на место первой
-        await page.locator('#at-layout-item-1').hover();
-        await page.mouse.down();
-        await page.mouse.move(firstLayout!.x + firstLayout!.width / 2, firstLayout!.y + firstLayout!.height / 2);
-        await page.mouse.up();
+        let origin = page.locator('#at-layout-item-1');
+        let target = page.locator('#at-layout-item-0');
+        await origin.dragTo(target);
         await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Сохраняем изменения
         let requestPromise = page.waitForResponse(request => request.url().includes(`/v1/layouts?`));
@@ -1073,13 +1070,10 @@ test.describe("Tests with created layout", () => {
         //Разворачиваем панель раскладок
         await page.locator('#at-layout-expand').click();
         await waitAnimationEnds(page, page.locator('#at-layout-items'));
-        //Получаем координаты второй раскладки в панели
-        let firstLayout = await page.locator('#at-layout-item-0').boundingBox();
         //Перетаскиваем вторую раскладку на место первой
-        await page.locator('#at-layout-item-1').hover();
-        await page.mouse.down();
-        await page.mouse.move(firstLayout!.x + firstLayout!.width / 2, firstLayout!.y + firstLayout!.height / 2);
-        await page.mouse.up();
+        let origin = page.locator('#at-layout-item-1');
+        let target = page.locator('#at-layout-item-0');
+        await origin.dragTo(target);
         await waitAnimationEnds(page, page.locator('#at-layout-items'));
         //Слушаем запросы, чтобы при отмене не отсылался запрос на изменение раскладки
         let requestNotSent = true;
