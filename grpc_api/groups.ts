@@ -108,12 +108,12 @@ export async function deleteGroup(groupsID: string[]) {
     await configurationCollector("groups");
 };
 
-export async function addCameraToGroup(groupID: string, cameraIDs: string[]) {
+export async function addCameraToGroup(groupID: string, camerasList: { [key: string]: any, "videochannelID": string }[]) {
     let itemsArr: object[] = [];
-    for (let cam of cameraIDs) {
+    for (let camera of camerasList) {
         itemsArr.push({
             "group_id": groupID,
-            "object": cam
+            "object": camera.accessPoint
         });
     };
 
@@ -132,8 +132,8 @@ export async function addCameraToGroup(groupID: string, cameraIDs: string[]) {
         body: JSON.stringify(body)
     });
     
+    let nameList = camerasList.map(item => `${item.displayId}.${item.displayName}`);
     if (request.ok) {
-        console.log(`Camera ${cameraIDs.toString()} was successfully added to group "${groupID}"!`.green);
-    } else console.log(`Error: could not add ${cameraIDs.toString()} to group "${groupID}". Code: ${request.status}`.red);
-
+        console.log(`Camera ${nameList.toString()} was successfully added to group "${groupID}"!`.green);
+    } else console.log(`Error: could not add ${nameList.toString()} to group "${groupID}". Code: ${request.status}`.red);
 };

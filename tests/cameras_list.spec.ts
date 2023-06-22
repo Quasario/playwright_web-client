@@ -471,6 +471,13 @@ test.describe("Searching block", () => {
     test.beforeAll(async () => {
         await getHostName();
         await configurationCollector();
+        if (Configuration.cameras.length != 8) {
+            await cameraAnnihilator("all");
+            await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera", 0);
+            await createCamera(1, "AxxonSoft", "Virtual IP server", "admin123", "admin", "0.0.0.0", "80", "5", "Camera", 4);
+            console.log(Configuration);
+            await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
+        }
         //Проверяем текущую конфигурацию камер и меняем их ID/имена если они не совпадают с тестовым списком
         for (let i = 0; i < Configuration.cameras.length; i++) {
             if (Configuration.cameras[i].displayId != testCameraNames[i].fullId) {
@@ -812,14 +819,13 @@ test.describe("Searching block", () => {
         let second = await createGroup("Second");
         let subfirst = await createGroup("Subfirst", first);
     
-        await addCameraToGroup(first, [Configuration.cameras[0].accessPoint, Configuration.cameras[3].accessPoint, Configuration.cameras[7].accessPoint, Configuration.cameras[5].accessPoint,]);
-        await addCameraToGroup(subfirst, [Configuration.cameras[0].accessPoint, Configuration.cameras[5].accessPoint, Configuration.cameras[6].accessPoint,]);
-        await addCameraToGroup(second, [Configuration.cameras[1].accessPoint, Configuration.cameras[2].accessPoint, Configuration.cameras[4].accessPoint,]);
+        await addCameraToGroup(first, [Configuration.cameras[0], Configuration.cameras[3], Configuration.cameras[7], Configuration.cameras[5]]);
+        await addCameraToGroup(subfirst, [Configuration.cameras[0], Configuration.cameras[5], Configuration.cameras[6]]);
+        await addCameraToGroup(second, [Configuration.cameras[1], Configuration.cameras[2], Configuration.cameras[4]]);
     
         const responsePromise = page.waitForResponse(request => request.url().includes(`${currentURL}/group`));
         await page.reload();
         await responsePromise;
-        //await setObjectPermissions("New_Role", [Configuration.cameras[0].accessPoint, Configuration.cameras[1].accessPoint, Configuration.cameras[6].accessPoint, Configuration.cameras[7].accessPoint], "CAMERA_ACCESS_FORBID");
     
         await page.getByRole('button', { name: 'Hardware'}).click();
         await expect(page.locator('[id="at-groups-list"]')).toHaveText('Default', { ignoreCase: false });
@@ -857,15 +863,38 @@ test.describe("Searching block", () => {
         //Проверяем что веб-клиент не упал
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
+
+    test.only('Multiple check of camera group panel (CLOUD-T140)', async ({ page }) => {
+        // await page.pause();
+        if (Configuration.groups.length != 4) {
+            await groupAnnihilator("all");
+            let first = await createGroup("First");
+            let second = await createGroup("Second");
+            let subfirst = await createGroup("Subfirst", first);
+        
+            await addCameraToGroup(first, [Configuration.cameras[0], Configuration.cameras[3], Configuration.cameras[7], Configuration.cameras[5]]);
+            await addCameraToGroup(subfirst, [Configuration.cameras[0], Configuration.cameras[5], Configuration.cameras[6]]);
+            await addCameraToGroup(second, [Configuration.cameras[1], Configuration.cameras[2], Configuration.cameras[4]]);
+        }
+
+        for (let i = 1; i <= 20; i++ ) {
+            await page.reload();
+            await page.waitForResponse(request => request.url().includes(`/group`));
+            await expect(page.locator('[id="at-groups-list"]')).toHaveText('Default', { ignoreCase: false });
+            await page.locator('[id="at-groups-list"]').click();
+            await expect(page.getByRole('button', { name: "First", exact: true })).toBeVisible();
+            await expect(page.getByRole('button', { name: "Second", exact: true })).toBeVisible();
+            await expect(page.getByRole('button', { name: "First > Subfirst", exact: true })).toBeVisible();
+            // console.log(`Прогон #${i}`);
+        }
+    });
     
     test('Access to group panel check (CLOUD-T503)', async ({ page }) => {
         // await page.pause();
-    
-        if (Configuration.groups.length == 0) {
-            let extra = await createGroup("Extra");
-            await addCameraToGroup(extra, [Configuration.cameras[0].accessPoint, Configuration.cameras[3].accessPoint,]);
-        }
-    
+      
+        let extra = await createGroup("Extra");
+        await addCameraToGroup(extra, [Configuration.cameras[0], Configuration.cameras[3]]);
+        
         await setRolePermissions("New_Role", userWithoutGroupPanel);
         
         await logout(page);
