@@ -864,7 +864,7 @@ test.describe("Searching block", () => {
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
-    test.only('Multiple check of camera group panel (CLOUD-T140)', async ({ page }) => {
+    test('Multiple check of camera group panel (CLOUD-T140)', async ({ page }) => {
         // await page.pause();
         if (Configuration.groups.length != 4) {
             await groupAnnihilator("all");
