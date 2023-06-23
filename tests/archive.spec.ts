@@ -1211,7 +1211,7 @@ test.describe("Common block", () => {
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
-    test.only('Switching between solo and layout playback (CLOUD-T308)', async ({ page }) => {
+    test('Switching between solo and layout playback (CLOUD-T308)', async ({ page }) => {
 
         await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], h265Cameras[1]], 2, 2, "Transition");
         recordGenerated = true; /////

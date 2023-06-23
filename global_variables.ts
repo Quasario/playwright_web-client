@@ -1,11 +1,12 @@
 import { getHostName } from "./http_api/http_host";
 import { green, blue, yellow, red } from 'colors'
 
-export let currentURL = "http://192.168.0.13"; //"http://127.0.0.1"
-export let isLocalMachine = false; //если тесты и сервер находятся на одной машине - true
-export let hostName: string;
-export let videoFolder = 'C:/demovideo';
-export let archiveDirection = 'C:/';
+export const currentURL = "http://192.168.0.13"; //"http://127.0.0.1"
+export const isLocalMachine = false; //если тесты и сервер находятся на одной машине - true
+export const videoFolder = 'C:/demovideo';
+export const archiveDirection = 'C:/';
+
+export let hostName: string; //менять не нужно, устанавливается автоматически
 
 
 export let Configuration = {
