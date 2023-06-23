@@ -17,23 +17,23 @@ test.describe("Common block", () => {
     test.beforeAll(async () => {
         await getHostName();
         await configurationCollector();
-        // await cameraAnnihilator("all");
-        // await layoutAnnihilator("all");
-        // await roleAnnihilator("all");
-        // await userAnnihilator("all");
-        // await deleteArchive('Black');
-        // await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
-        // await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
-        // await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
+        await cameraAnnihilator("all");
+        await layoutAnnihilator("all");
+        await roleAnnihilator("all");
+        await userAnnihilator("all");
+        await deleteArchive('Black');
+        await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
+        await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
+        await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
         h264Cameras = Configuration.cameras.slice(0, 12);
         h265Cameras = Configuration.cameras.slice(12, 21);
         mjpegCameras = Configuration.cameras.slice(21, 23);
-        // await addVirtualVideo(h264Cameras, "tracker", "tracker");
-        // await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
-        // await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
-        // await createArchive("Black");
-        // await createArchiveVolume("Black", 30);
-        // await createArchiveContext("Black", Configuration.cameras, true, "High");
+        await addVirtualVideo(h264Cameras, "tracker", "tracker");
+        await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
+        await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
+        await createArchive("Black");
+        await createArchiveVolume("Black", 30);
+        await createArchiveContext("Black", Configuration.cameras, true, "High");
     });
 
     test.beforeEach(async ({ page }) => {
