@@ -53,6 +53,7 @@ export async function getCameraList() {
     for (let camera of cameras) {
         let cameraVideochannel = camera.accessPoint.replace("SourceEndpoint.video:", "VideoChannel.").replace(/:\w*/, "");
         let cameraBinding = camera.accessPoint.replace(/\/SourceEndpoint.video:.*/, "");
+        let accessPointChanged = camera.accessPoint.replace("hosts/", "");
         let isIpServer = false;
         if (camera.displayId.includes('.')) {
             isIpServer = true;
@@ -60,6 +61,7 @@ export async function getCameraList() {
 
         camera['videochannelID'] = cameraVideochannel;
         camera['cameraBinding'] = cameraBinding;
+        camera['accessPointChanged'] = accessPointChanged;
         camera['isIpServer'] = isIpServer;
         
         newArr.push(camera);
@@ -229,7 +231,8 @@ export async function waitAnimationEnds(page: Page, locator: Locator) {
         console.log(`${anime.length} animations is processing`);
 
         if (i > 50) {
-            test.fail();
+            //роняем тест
+            expect(false).toBeTruthy();
         }
     }
 }

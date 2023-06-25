@@ -171,67 +171,36 @@ export async function getArchiveList() {
 export async function createArchiveContext(archiveName: string, camerasList: { [key: string]: any }[], isConstantRec = true, stream: "High" | "Low" = "High") {
     let unitsList: object[] = [];
     for (let camera of camerasList) {
-        if (stream == "Low") {
-            unitsList.push({
-                "type": "ArchiveContext",
-                "properties": [
-                    {
-                        "id": "camera_ref",
-                        "value_string": camera.accessPoint
-                    },
-                    {
-                        "id": "constant_recording",
-                        "value_bool": isConstantRec
-                    },
-                    {
-                        "id": "streaming_id",
-                        "value_string": camera.videoStreams[1].accessPoint
-                    },
-                    {
-                        "id": "prerecord_sec",
-                        "value_int32": 0
-                    },
-                    {
-                        "id": "day_depth",
-                        "value_int32": 0
-                    },
-                    {
-                        "id": "specific_fps",
-                        "value_double": 0
-                    }
-                ]
-            });
-        } else {
-            unitsList.push({
-                "type": "ArchiveContext",
-                "properties": [
-                    {
-                        "id": "camera_ref",
-                        "value_string": camera.accessPoint
-                    },
-                    {
-                        "id": "constant_recording",
-                        "value_bool": isConstantRec
-                    },
-                    {
-                        "id": "streaming_id",
-                        "value_string": camera.videoStreams[0].accessPoint
-                    },
-                    {
-                        "id": "prerecord_sec",
-                        "value_int32": 0
-                    },
-                    {
-                        "id": "day_depth",
-                        "value_int32": 0
-                    },
-                    {
-                        "id": "specific_fps",
-                        "value_double": 0
-                    }
-                ]
-            });
-        }          
+        
+        unitsList.push({
+            "type": "ArchiveContext",
+            "properties": [
+                {
+                    "id": "camera_ref",
+                    "value_string": camera.accessPoint
+                },
+                {
+                    "id": "constant_recording",
+                    "value_bool": isConstantRec
+                },
+                {
+                    "id": "streaming_id",
+                    "value_string": stream === "High" ? camera.videoStreams[0].accessPoint : camera.videoStreams[1].accessPoint
+                },
+                {
+                    "id": "prerecord_sec",
+                    "value_int32": 0
+                },
+                {
+                    "id": "day_depth",
+                    "value_int32": 0
+                },
+                {
+                    "id": "specific_fps",
+                    "value_double": 0
+                }
+            ]
+        });    
     };
 
     let body = {
@@ -263,4 +232,79 @@ export async function createArchiveContext(archiveName: string, camerasList: { [
     await configurationCollector("cameras");
 };
 
+export async function getArchiveContext(archiveName: string, camerasList: { [key: string]: any }[]) {
+    let body = {
+        "method":"axxonsoft.bl.config.ConfigurationService.ListUnits",
+        "data":{
+            "unit_uids": [`hosts/${hostName}/MultimediaStorage.${archiveName}`]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+
+    let response = await request.json();
+
+    let output: any[] = [];
+    if (request.ok) {
+        for (let camera of camerasList) {
+            for (let unit of response.units[0].units) {
+                if (unit.type == "ArchiveContext" && camera.accessPoint == unit.display_id) {
+                    output.push(unit.uid);
+                }
+            }
+        }
+    } else console.log(`Error: Coudn't pull archive list. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    return output;
+};
+
+export async function changeArchiveContext(contextList: { [key: string]: any }[], isConstantRec = true, stream: "High" | "Low" = "High") {
+    let changeList: object[] = [];
+    for (let context of contextList) {
+
+        changeList.push({
+            "uid": context,
+            "type": "ArchiveContext",
+            "properties": [
+                {
+                    "id": "constant_recording",
+                    "value_bool": isConstantRec
+                },
+                {
+                    "id": "stream_index",
+                    "value_string": stream == "High" ? "0" : "1"
+                },
+            ]
+        });
+             
+    };
+
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": changeList
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Archive context for cameras was changed to constant record: ${isConstantRec}, stream: ${stream}`.green);
+    } else console.log(`Error: Coudn't created archive context for cameras. Code: ${request.status}, Failed: ${response.failed}`.red);
+    await configurationCollector("cameras");
+};
 

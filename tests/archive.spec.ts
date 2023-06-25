@@ -2,7 +2,7 @@ import { test, expect, type WebSocket, type Page, Locator} from '@playwright/tes
 import { currentURL, Configuration, hostName } from '../global_variables';
 import { createRole, setRolePermissions, deleteRoles, setObjectPermissions } from '../grpc_api/roles';
 import { createUser, setUserPassword, assignUserRole, deleteUsers } from '../grpc_api/users';
-import { createArchive, createArchiveVolume, createArchiveContext, deleteArchive, getArchiveList } from '../grpc_api/archives';
+import { createArchive, createArchiveVolume, createArchiveContext, deleteArchive, getArchiveList, getArchiveContext, changeArchiveContext } from '../grpc_api/archives';
 import { createGroup, setGroup, addCameraToGroup } from '../grpc_api/groups';
 import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveStatus, changeIPServerCameraActiveStatus, changeSingleCameraID, changeSingleCameraName, changeIPServerCameraID, changeIPServerCameraName} from '../grpc_api/cameras';
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
@@ -17,23 +17,23 @@ test.describe("Common block", () => {
     test.beforeAll(async () => {
         await getHostName();
         await configurationCollector();
-        await cameraAnnihilator("all");
-        await layoutAnnihilator("all");
-        await roleAnnihilator("all");
-        await userAnnihilator("all");
-        await deleteArchive('Black');
-        await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
-        await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
-        await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
+        // await cameraAnnihilator("all");
+        // await layoutAnnihilator("all");
+        // await roleAnnihilator("all");
+        // await userAnnihilator("all");
+        // await deleteArchive('Black');
+        // await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
+        // await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
+        // await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
         h264Cameras = Configuration.cameras.slice(0, 12);
         h265Cameras = Configuration.cameras.slice(12, 21);
         mjpegCameras = Configuration.cameras.slice(21, 23);
-        await addVirtualVideo(h264Cameras, "tracker", "tracker");
-        await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
-        await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
-        await createArchive("Black");
-        await createArchiveVolume("Black", 30);
-        await createArchiveContext("Black", Configuration.cameras, true, "High");
+        // await addVirtualVideo(h264Cameras, "tracker", "tracker");
+        // await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
+        // await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
+        // await createArchive("Black");
+        // await createArchiveVolume("Black", 30);
+        // await createArchiveContext("Black", Configuration.cameras, true, "High");
     });
 
     test.beforeEach(async ({ page }) => {
@@ -43,10 +43,8 @@ test.describe("Common block", () => {
     
     test('X1 layout h264 playback (CLOUD-T300)', async ({ page }) => {
         await createLayout(h264Cameras, 1, 1, "X1-H264");
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
         await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
@@ -181,10 +179,8 @@ test.describe("Common block", () => {
 
     test('X1 layout H265 playback (CLOUD-T301)', async ({ page }) => {
         await createLayout(h265Cameras, 1, 1, "X1-H265");
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
         await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
@@ -320,10 +316,8 @@ test.describe("Common block", () => {
 
     test('X12 layout H264 play (CLOUD-T302)', async ({ page }) => {
         await createLayout(h264Cameras, 4, 3, "X12-H264");
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
         await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
@@ -461,10 +455,8 @@ test.describe("Common block", () => {
 
     test('X9 layout H265 playback (CLOUD-T303)', async ({ page }) => {
         await createLayout(h265Cameras, 3, 3, "X9-H265");
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
         await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
@@ -614,11 +606,8 @@ test.describe("Common block", () => {
         }
 
         await createLayout(mixedArr, 4, 4, "X16-MIXED");
-
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
         await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
@@ -766,10 +755,8 @@ test.describe("Common block", () => {
         await addVirtualVideo([lastCamera], "tracker", "tracker");
         await createArchiveContext("Black", [lastCamera], false, "High");
         await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], lastCamera], 2, 2, "Without record");
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
         await page.goto(currentURL);
         await authorization(page, "root", "root");
         //Получаем веб-сокет объект видеостримов
@@ -917,10 +904,8 @@ test.describe("Common block", () => {
         const lastCamera = Configuration.cameras[Configuration.cameras.length - 1];
         await addVirtualVideo([lastCamera], "tracker", "tracker");
         await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], lastCamera], 2, 2, "Without archive");
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
 
         await page.goto(currentURL);
         await authorization(page, "root", "root");
@@ -1066,11 +1051,8 @@ test.describe("Common block", () => {
     test('Layout playback with duplicate camera (CLOUD-T307)', async ({ page }) => {
 
         await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], h264Cameras[0]], 2, 2, "Duplicate camera");
-        recordGenerated = true; /////
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
 
         await page.goto(currentURL);
         await authorization(page, "root", "root");
@@ -1214,11 +1196,8 @@ test.describe("Common block", () => {
     test('Switching between solo and layout playback (CLOUD-T308)', async ({ page }) => {
 
         await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], h265Cameras[1]], 2, 2, "Transition");
-        recordGenerated = true; /////
-        if (!recordGenerated) {
-            await page.waitForTimeout(30000);
-            recordGenerated = true;
-        }
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
 
         await page.goto(currentURL);
         await authorization(page, "root", "root");
@@ -1247,7 +1226,7 @@ test.describe("Common block", () => {
         //Сохраняем время поинтера перед воспроизведением
         let startPointerTime = await page.locator('.control [role="none"] span').first().innerText(); //СДЕЛАТЬ СЕЛЕКТОРЫ
         //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
-        let startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        let startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && data.payload.includes('entities'), timeout: 10000 });
         await page.locator('#at-archive-control-play-pause').click();
         await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
         //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
@@ -1271,8 +1250,8 @@ test.describe("Common block", () => {
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
 
-        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1 и в режиме однократной раскладки, то endpoint вместо entities
-        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && data.payload.includes('"endpoint":'), timeout: 10000 });
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1 и в режиме однократера (нет entities)
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && !data.payload.includes('entities'), timeout: 10000 });
         await page.locator('#at-archive-control-play-pause').click();
         await expect(page.locator('.VideoCell--playing video')).toHaveCount(1);
         //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
@@ -1296,7 +1275,7 @@ test.describe("Common block", () => {
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
 
         //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
-        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && data.payload.includes('entities'), timeout: 10000 });
         await page.locator('#at-archive-control-play-pause').click();
         await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
         //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
@@ -1320,8 +1299,8 @@ test.describe("Common block", () => {
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H265");
 
-        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
-        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && data.payload.includes('"endpoint":'), timeout: 10000 });
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1 и в режиме однократера (нет entities)
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && !data.payload.includes('entities'), timeout: 10000 });
         await page.locator('#at-archive-control-play-pause').click();
         await expect(page.locator('.VideoCell--playing video')).toHaveCount(1);
         //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
@@ -1348,6 +1327,131 @@ test.describe("Common block", () => {
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
 
         //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1') && data.payload.includes('entities'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
+        //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
+        wsFrame = JSON.parse((await startCommand).payload.toString());
+        //Играем видео 5 секунд
+        await page.waitForTimeout(5000);
+        //Сравниваем время в начале воспроизведения и в конце
+        lastPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, lastPointerTime);
+        startPointerTime = lastPointerTime;
+
+        //Ставим архив на паузу и проверяем, что поток команд прекратился
+        stopCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('stop') && data.payload.includes(wsFrame.streamId), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await stopCommand;
+        //Ждем 2 секунды так как сообщения не прерываются мгновенно
+        await page.waitForTimeout(2000);
+        //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Switch layout while playing (CLOUD-T309)', async ({ page }) => {
+
+        await createLayout([h264Cameras[0], h265Cameras[0], h264Cameras[1], h265Cameras[1]], 2, 2, "Full");
+        await createLayout([h265Cameras[1], h264Cameras[1]], 2, 1, "Half 2");
+        await createLayout([h264Cameras[0], h265Cameras[0]], 2, 1, "Half 1");
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive'}).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что камер 2 и с нужными кодеком/названием
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+        //Проверяем, что активна первая камера
+        await expect(page.locator('.VideoCell').nth(0)).toHaveClass(/.*VideoCell--active.*/);
+
+        //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
+        await scrollLastInterval(page);
+        //Кликаем на центр последнего записанного интервала
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1));
+        const lastInterval = page.locator('.intervals').last().locator('rect').last();//ПОМЕТИТЬ СЕЛЕКТОРАМИ ИНТЕРВАЛЫ АРХИВА СПРАВА
+        await clickToInterval(lastInterval, 0.3);
+        // await page.pause();
+
+        //Сохраняем время поинтера перед воспроизведением
+        let startPointerTime = await page.locator('.control [role="none"] span').first().innerText(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
+        let startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(2);
+        //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
+        let wsFrame = JSON.parse((await startCommand).payload.toString());
+        //Играем видео 5 секунд
+        await page.waitForTimeout(5000);
+        //Сравниваем время в начале воспроизведения и в конце
+        let lastPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, lastPointerTime);
+        startPointerTime = lastPointerTime;
+
+        //Выбираем вторую раскладку и проверяем, что видео остановлено
+        await page.locator('#at-layout-expand').click();
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        let stopCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('stop') && data.payload.includes(wsFrame.streamId), timeout: 10000 });
+        await page.locator('#at-layout-item-1').click({ force: true });
+        await stopCommand;
+        //Ждем 2 секунды так как сообщения не прерываются мгновенно
+        await page.waitForTimeout(2000);
+        //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+        //Проверяем, что на экране нужная раскладка
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
+        //Проверяем, что активна первая камера
+        await expect(page.locator('.VideoCell').nth(0)).toHaveClass(/.*VideoCell--active.*/);
+
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(2);
+        //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
+        wsFrame = JSON.parse((await startCommand).payload.toString());
+        //Играем видео 5 секунд
+        await page.waitForTimeout(5000);
+        //Сравниваем время в начале воспроизведения и в конце
+        lastPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, lastPointerTime);
+        startPointerTime = lastPointerTime;
+
+        //Ставим архив на паузу и проверяем, что поток команд прекратился
+        stopCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('stop') && data.payload.includes(wsFrame.streamId), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await stopCommand;
+        //Ждем 2 секунды так как сообщения не прерываются мгновенно
+        await page.waitForTimeout(2000);
+        //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+
+        //Выбираем третью раскладку и проверяем, что видео остановлено
+        await page.locator('#at-layout-expand').click();
+        await waitAnimationEnds(page, page.locator('#at-layout-items'));
+        await page.locator('#at-layout-item-2').click({ force: true });
+        //Проверяем, что на экране нужная раскладка
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(3)).toContainText("H265");
+        //Проверяем, что активна последняя камера
+        await expect(page.locator('.VideoCell').nth(3)).toHaveClass(/.*VideoCell--active.*/);
+
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
         startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
         await page.locator('#at-archive-control-play-pause').click();
         await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
@@ -1367,6 +1471,392 @@ test.describe("Common block", () => {
         //Ждем 2 секунды так как сообщения не прерываются мгновенно
         await page.waitForTimeout(2000);
         //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Switch archive while playing (CLOUD-T310)', async ({ page }) => {
+        await deleteArchive("White");
+        await createArchive("White");
+        await createArchiveVolume("White", 1);
+        await createArchiveContext("White", [h264Cameras[0], h264Cameras[1], h265Cameras[0], h265Cameras[1]], true, "High");
+        await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], h265Cameras[1]], 2, 2, "Full");
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что камер 4 и с нужными кодеком/названием
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(3)).toContainText("H265");
+        
+        //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
+        await scrollLastInterval(page);
+        //Кликаем на центр последнего записанного интервала
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1));
+        const lastInterval = page.locator('.intervals').last().locator('rect').last();//ПОМЕТИТЬ СЕЛЕКТОРАМИ ИНТЕРВАЛЫ АРХИВА СПРАВА
+        await clickToInterval(lastInterval, 0.3);
+        // await page.pause();
+
+        //Сохраняем время поинтера перед воспроизведением
+        let startPointerTime = await page.locator('.control [role="none"] span').first().innerText(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
+        let startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
+        //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
+        let wsFrame = JSON.parse((await startCommand).payload.toString());
+        //Проверяем, что у все камер воспроизводят Black архив
+        expect(wsFrame.entities[0].archive.includes('Black')).toBeTruthy();
+        expect(wsFrame.entities[1].archive.includes('Black')).toBeTruthy(); 
+        expect(wsFrame.entities[2].archive.includes('Black')).toBeTruthy(); 
+        expect(wsFrame.entities[3].archive.includes('Black')).toBeTruthy();
+        //Играем видео 5 секунд
+        await page.waitForTimeout(5000);
+        //Сравниваем время в начале воспроизведения и в конце
+        let lastPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, lastPointerTime);
+
+        //Переключаем архив на первой камере
+        await page.getByRole('button', { name: 'Black' }).nth(0).click();
+        let stopCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('stop') && data.payload.includes(wsFrame.streamId), timeout: 10000 });
+        await page.getByRole('option', { name: 'White' }).click();
+        await stopCommand;
+        //Ждем 2 секунды так как сообщения не прерываются мгновенно
+        await page.waitForTimeout(2000);
+        //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
+        //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
+        wsFrame = JSON.parse((await startCommand).payload.toString());
+        //Сохраняем время поинтера
+        startPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        //Проверяем, что у первой камеры архив White, у остальных Black
+        expect(wsFrame.entities[0].archive.includes('White')).toBeTruthy();
+        expect(wsFrame.entities[1].archive.includes('Black')).toBeTruthy(); 
+        expect(wsFrame.entities[2].archive.includes('Black')).toBeTruthy(); 
+        expect(wsFrame.entities[3].archive.includes('Black')).toBeTruthy();
+        //Играем видео 5 секунд
+        await page.waitForTimeout(5000);
+        //Сравниваем время в начале воспроизведения и в конце
+        lastPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, lastPointerTime);
+
+        //Ставим архив на паузу и проверяем, что поток команд прекратился
+        stopCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('stop') && data.payload.includes(wsFrame.streamId), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await stopCommand;
+        //Ждем 2 секунды так как сообщения не прерываются мгновенно
+        await page.waitForTimeout(2000);
+        //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+
+        //Переключаем архив на всех камерах
+        await page.getByRole('button', { name: 'Black' }).nth(0).click();
+        await page.getByRole('option', { name: 'White' }).click();
+        await page.getByRole('button', { name: 'Black' }).nth(0).click();
+        await page.getByRole('option', { name: 'White' }).click();
+        await page.getByRole('button', { name: 'Black' }).nth(0).click();
+        await page.getByRole('option', { name: 'White' }).click();
+
+        //Кликаем на кнопку воспроизведения и ждем сообщение о старте потоков со скоростью 1
+        startCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(4);
+        //Преобразуем сообщения в объект, чтобы дальше извлечь из них streamId
+        wsFrame = JSON.parse((await startCommand).payload.toString());
+        startPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        //Проверяем, что все камеры воспроизводят архив White
+        expect(wsFrame.entities[0].archive.includes('White')).toBeTruthy();
+        expect(wsFrame.entities[1].archive.includes('White')).toBeTruthy(); 
+        expect(wsFrame.entities[2].archive.includes('White')).toBeTruthy(); 
+        expect(wsFrame.entities[3].archive.includes('White')).toBeTruthy();
+        //Играем видео 5 секунд
+        await page.waitForTimeout(5000);
+        //Сравниваем время в начале воспроизведения и в конце
+        lastPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, lastPointerTime);
+
+        //Переключаем архив на последней камере
+        await page.getByRole('button', { name: 'White' }).nth(3).click();
+        stopCommand = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('stop') && data.payload.includes(wsFrame.streamId), timeout: 10000 });
+        await page.getByRole('option', { name: 'Black' }).click();
+        await stopCommand;
+        //Ждем 2 секунды так как сообщения не прерываются мгновенно
+        await page.waitForTimeout(2000);
+        //Проверяем, что сообщения в WS остановлены
+        await isMessagesStop(page, WS);
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Correct codec presentation (CLOUD-T311)', async ({ page }) => {
+        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265/H264 High", -1);
+        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265/H264 Low", -1);
+        await createCamera(1, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264/MJPEG High", -1);
+        let addedCameras = [Configuration.cameras[Configuration.cameras.length - 3], Configuration.cameras[Configuration.cameras.length - 2], Configuration.cameras[Configuration.cameras.length - 1]]
+        await addVirtualVideo([addedCameras[0]], "H265-2K", "tracker");
+        await addVirtualVideo([addedCameras[1]], "H265-2K", "tracker");
+        await addVirtualVideo([addedCameras[2]], "tracker", "witcher_mjpeg");
+        await createArchiveContext("Black", [addedCameras[0]], true, "High");
+        await createArchiveContext("Black", [addedCameras[1]], true, "Low");
+        await createArchiveContext("Black", [addedCameras[2]], true, "High");
+        await createLayout([addedCameras[0], addedCameras[1], addedCameras[2]], 3, 1, "Codecs representation");
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+        //Активируем дебаг панель
+        await page.locator('img').first().dblclick();
+        //Переключаем все камеры на высокий поток
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+        await page.getByRole('option', { name: 'High' }).click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+        await page.getByRole('option', { name: 'High' }).click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_AUTO"]').nth(0).click();
+        await page.getByRole('option', { name: 'High' }).click();
+
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что в ячейках указаны верные кодеки
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(3);
+        await expect(page.locator('.VideoCell__debug').nth(0)).toContainText("H265");
+        await expect(page.locator('.VideoCell__debug').nth(1)).toContainText("H264");
+        await expect(page.locator('.VideoCell__debug').nth(2)).toContainText("H264");
+
+        //Кликаем на кнопку воспроизведения
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(3);
+        //Играем видео 3 секунды
+        await page.waitForTimeout(3000);
+        //Проверяем, что в ячейках указаны верные кодеки
+        await expect(page.locator('.VideoCell__debug').nth(0)).toContainText("H265");
+        await expect(page.locator('.VideoCell__debug').nth(1)).toContainText("H264");
+        await expect(page.locator('.VideoCell__debug').nth(2)).toContainText("H264");
+
+        //Выходим в лайв режим
+        await page.locator('#at-app-mode-live').click();
+
+        //Переключаем все камеры на низкий поток
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_HIGH"]').nth(0).click();
+        await page.getByRole('option', { name: 'Low' }).click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_HIGH"]').nth(0).click();
+        await page.getByRole('option', { name: 'Low' }).click();
+        await page.locator('[data-testid="at-camera-resolution-CAMERA_STREAM_RESOLUTION_HIGH"]').nth(0).click();
+        await page.getByRole('option', { name: 'Low' }).click();
+
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что в ячейках указаны верные кодеки
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(3);
+        await expect(page.locator('.VideoCell__debug').nth(0)).toContainText("H265");
+        await expect(page.locator('.VideoCell__debug').nth(1)).toContainText("H264");
+        await expect(page.locator('.VideoCell__debug').nth(2)).toContainText("H264");
+
+        //Кликаем на кнопку воспроизведения
+        await page.locator('#at-archive-control-play-pause').click();
+        await expect(page.locator('.VideoCell--playing video')).toHaveCount(3);
+        //Играем видео 3 секунды
+        await page.waitForTimeout(3000);
+        //Проверяем, что в ячейках указаны верные кодеки
+        await expect(page.locator('.VideoCell__debug').nth(0)).toContainText("H265");
+        await expect(page.locator('.VideoCell__debug').nth(1)).toContainText("H264");
+        await expect(page.locator('.VideoCell__debug').nth(2)).toContainText("H264");
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Playback thru archive gap, when archive exists for other cameras (CLOUD-T312)', async ({ page }) => {
+        //Проверяем, что записи достаточно
+        await isRecordEnough(page);
+
+        let contextList = await getArchiveContext("Black", [h264Cameras[0]]);
+        await changeArchiveContext(contextList, false, "High");
+        const archiveRecordOffTime = new Date();
+        await page.waitForTimeout(10000);
+        await changeArchiveContext(contextList, true, "High");
+        await createLayout([h264Cameras[0], h264Cameras[1], h265Cameras[0], h265Cameras[1]], 2, 2, "Arhive Gap 1");
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что в ячейках указаны верные кодеки
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(3)).toContainText("H265");
+        //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
+        await scrollLastInterval(page);
+        //Выставляем время архива до пробела
+        await page.locator('[data-testid="at-camera-time"]').nth(0).click();
+        await page.locator('input[type="text"]').nth(0).fill(String(archiveRecordOffTime.getHours()));
+        await page.locator('input[type="text"]').nth(1).fill(String(archiveRecordOffTime.getMinutes()));
+        await page.locator('input[type="text"]').nth(2).fill(String(archiveRecordOffTime.getSeconds() - 3));
+        await page.keyboard.press("Enter");
+
+        //Кликаем на кнопку воспроизведения
+        await page.locator('#at-archive-control-play-pause').click();
+        //Ждем в течении 3 секунд, что видео нигде не останавилось
+        let promice1 = videoIsPlaying(page, 0, 3);
+        let promice2 = videoIsPlaying(page, 1, 3);
+        let promice3 = videoIsPlaying(page, 2, 3);
+        let promice4 = videoIsPlaying(page, 3, 3);
+        expect(await promice1).toBeTruthy();
+        expect(await promice2).toBeTruthy();
+        expect(await promice3).toBeTruthy();
+        expect(await promice4).toBeTruthy();
+
+        //Ждем в течении 5 секунд, видео на первой ячейке должно было останавится
+        promice1 = videoIsPlaying(page, 0, 5);
+        promice2 = videoIsPlaying(page, 1, 5);
+        promice3 = videoIsPlaying(page, 2, 5);
+        promice4 = videoIsPlaying(page, 3, 5);
+        expect(await promice1).toBeFalsy();
+        expect(await promice2).toBeTruthy();
+        expect(await promice3).toBeTruthy();
+        expect(await promice4).toBeTruthy();
+
+        //Ждем 10 секунд, чтобы перебраться через архивный пробел
+        await page.waitForTimeout(10000);
+
+        //Смотрим в течении 5 секунд, что видео везеде идет
+        promice1 = videoIsPlaying(page, 0, 5);
+        promice2 = videoIsPlaying(page, 1, 5);
+        promice3 = videoIsPlaying(page, 2, 5);
+        promice4 = videoIsPlaying(page, 3, 5);
+        expect(await promice1).toBeTruthy();
+        expect(await promice2).toBeTruthy();
+        expect(await promice3).toBeTruthy();
+        expect(await promice4).toBeTruthy();
+
+        //Останваливаем воспроизведение
+        await page.locator('#at-archive-control-play-pause').click();
+        await page.waitForTimeout(2000);
+        await isMessagesStop(page, WS);
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test.only('Playback thru archive gap, when archive not exists for other cameras (CLOUD-T313)', async ({ page }) => {
+        //Проверяем, что записи достаточно
+        recordGenerated = true;
+        await isRecordEnough(page);
+
+        let contextList = await getArchiveContext("Black", [h264Cameras[2], h264Cameras[3], h265Cameras[2], h265Cameras[3]]);
+        await changeArchiveContext(contextList, false, "High");
+        const archiveRecordOffTime = new Date();
+        await page.waitForTimeout(10000);
+        await changeArchiveContext([contextList[3]], true, "High");
+        await page.waitForTimeout(3000);
+        await changeArchiveContext([contextList[2]], true, "High");
+        await page.waitForTimeout(3000);
+        await changeArchiveContext([contextList[0], contextList[1]], true, "High");
+        await createLayout([h264Cameras[2], h264Cameras[3], h265Cameras[2], h265Cameras[3]], 2, 2, "Arhive Gap 2");
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что в ячейках указаны верные кодеки
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(3)).toContainText("H265");
+        //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
+        await scrollLastInterval(page);
+        //Выставляем время архива до пробела
+        await page.locator('[data-testid="at-camera-time"]').nth(0).click();
+        await page.locator('input[type="text"]').nth(0).fill(String(archiveRecordOffTime.getHours()));
+        await page.locator('input[type="text"]').nth(1).fill(String(archiveRecordOffTime.getMinutes()));
+        await page.locator('input[type="text"]').nth(2).fill(String(archiveRecordOffTime.getSeconds() - 3));
+        await page.keyboard.press("Enter");
+
+        //Кликаем на кнопку воспроизведения
+        await page.locator('#at-archive-control-play-pause').click();
+        //Ждем в течении 3 секунд, что видео нигде не останавилось
+        let promice1 = videoIsPlaying(page, 0, 3);
+        let promice2 = videoIsPlaying(page, 1, 3);
+        let promice3 = videoIsPlaying(page, 2, 3);
+        let promice4 = videoIsPlaying(page, 3, 3);
+        expect(await promice1).toBeTruthy();
+        expect(await promice2).toBeTruthy();
+        expect(await promice3).toBeTruthy();
+        expect(await promice4).toBeTruthy();
+
+        //Ждем в течении 7 секунд, видео должно играть на последней камере
+        promice1 = videoIsPlaying(page, 0, 7);
+        promice2 = videoIsPlaying(page, 1, 7);
+        promice3 = videoIsPlaying(page, 2, 7);
+        promice4 = videoIsPlaying(page, 3, 7);
+        expect(await promice1).toBeFalsy();
+        expect(await promice2).toBeFalsy();
+        expect(await promice3).toBeFalsy();
+        expect(await promice4).toBeTruthy();
+
+        //Смотрим в течении 7 секунд, видео должно идти на последних двух камерах
+        promice1 = videoIsPlaying(page, 0, 7);
+        promice2 = videoIsPlaying(page, 1, 7);
+        promice3 = videoIsPlaying(page, 2, 7);
+        promice4 = videoIsPlaying(page, 3, 7);
+        expect(await promice1).toBeFalsy();
+        expect(await promice2).toBeFalsy();
+        expect(await promice3).toBeTruthy();
+        expect(await promice4).toBeTruthy();
+
+        //Смотрим в течении 7 секунд, видео должно идти на всех камерах
+        promice1 = videoIsPlaying(page, 0, 7);
+        promice2 = videoIsPlaying(page, 1, 7);
+        promice3 = videoIsPlaying(page, 2, 7);
+        promice4 = videoIsPlaying(page, 3, 7);
+        expect(await promice1).toBeTruthy();
+        expect(await promice2).toBeTruthy();
+        expect(await promice3).toBeTruthy();
+        expect(await promice4).toBeTruthy();
+
+        //Останваливаем воспроизведение
+        await page.locator('#at-archive-control-play-pause').click();
+        await page.waitForTimeout(2000);
         await isMessagesStop(page, WS);
 
         //Проверяем что веб-клиент не упал
@@ -1433,3 +1923,37 @@ async function scrollLastInterval(page: Page) {
     await page.mouse.wheel(0, -3000);
     await page.waitForTimeout(1000);
 }
+
+async function isRecordEnough(page:Page) {
+    if (!recordGenerated) {
+        await page.waitForTimeout(30000);
+        recordGenerated = true;
+    }
+}
+
+async function videoIsPlaying(page:Page, cellNumber: number, playSeconds: number) {
+
+    const timer = page.locator('.VideoCell').nth(cellNumber).locator('[data-testid="at-camera-time"]');
+    let previousTime = 0;
+    let videoStoped = 0;
+    for (let i = 0; i < playSeconds; i++) {
+        await page.waitForTimeout(1000);
+
+        let currentTime = timeToSeconds(await timer.innerHTML());
+        console.log(cellNumber + ": " + currentTime);
+        
+        if (currentTime == previousTime){
+            videoStoped++;
+        } else {
+            videoStoped = 0;
+        }
+
+        if (videoStoped >= 2) {
+            return false;
+        }
+
+        previousTime = currentTime;
+    }
+    return true;
+}
+
