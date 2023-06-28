@@ -8,7 +8,7 @@ import { createCamera, deleteCameras, addVirtualVideo, changeSingleCameraActiveS
 import { createLayout, deleteLayouts, } from '../grpc_api/layouts';
 import { randomUUID } from 'node:crypto';
 import { getHostName } from '../http_api/http_host';
-import { getArchiveIntervals, transformISOtime } from '../http_api/http_archives';
+import { getArchiveIntervals, } from '../http_api/http_archives';
 import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, groupAnnihilator, configurationCollector, userAnnihilator, roleAnnihilator, waitAnimationEnds, timeToSeconds, authorization, openCameraList } from "../utils/utils.js";
 let h264Cameras: any[], h265Cameras: any[], mjpegCameras:  any[];
 let recordGenerated = false; //переменная показывает достаточен ли размер записи для начала теста
@@ -1694,6 +1694,7 @@ test.describe("Common block", () => {
 
     test('Playback thru archive gap, when archive exists for other cameras (CLOUD-T312)', async ({ page }) => {
         //Проверяем, что записи достаточно
+        recordGenerated = true;
         await isRecordEnough(page);
 
         let contextList = await getArchiveContext("Black", [h264Cameras[0]]);
@@ -1722,36 +1723,40 @@ test.describe("Common block", () => {
         //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
         await scrollLastInterval(page);
         //Выставляем время архива до пробела
-        await page.locator('[data-testid="at-camera-time"]').nth(0).click();
-        await page.locator('input[type="text"]').nth(0).fill(String(archiveRecordOffTime.getHours()));
-        await page.locator('input[type="text"]').nth(1).fill(String(archiveRecordOffTime.getMinutes()));
-        await page.locator('input[type="text"]').nth(2).fill(String(archiveRecordOffTime.getSeconds() - 3));
-        await page.keyboard.press("Enter");
+        const currentTime = new Date();
+        const firstCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[0], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+        await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
 
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
-        //Ждем в течении 3 секунд, что видео нигде не останавилось
-        let promice1 = videoIsPlaying(page, 0, 3);
-        let promice2 = videoIsPlaying(page, 1, 3);
-        let promice3 = videoIsPlaying(page, 2, 3);
-        let promice4 = videoIsPlaying(page, 3, 3);
+        //Ждем в течении 5 секунд, что видео нигде не останавилось
+        let promice1 = videoIsPlaying(page, 0, 5);
+        let promice2 = videoIsPlaying(page, 1, 5);
+        let promice3 = videoIsPlaying(page, 2, 5);
+        let promice4 = videoIsPlaying(page, 3, 5);
         expect(await promice1).toBeTruthy();
         expect(await promice2).toBeTruthy();
         expect(await promice3).toBeTruthy();
         expect(await promice4).toBeTruthy();
 
-        //Ждем в течении 5 секунд, видео на первой ячейке должно было останавится
-        promice1 = videoIsPlaying(page, 0, 5);
-        promice2 = videoIsPlaying(page, 1, 5);
-        promice3 = videoIsPlaying(page, 2, 5);
-        promice4 = videoIsPlaying(page, 3, 5);
+        //Вычисляем размер пробела в секундах
+        const gapStartHours = firstCameraIntervals[0].end.hours;
+        const gapStartMinutes = firstCameraIntervals[0].end.minutes;
+        const gapStartSeconds = firstCameraIntervals[0].end.seconds;
+        const gapStoptHours = firstCameraIntervals[1].begin.hours;
+        const gapStopMinutes = firstCameraIntervals[1].begin.minutes;
+        const gapStopSeconds = firstCameraIntervals[1].begin.seconds;
+        const gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+
+        //Ждем в течении длины пробела, видео на первой ячейке должно было останавится
+        promice1 = videoIsPlaying(page, 0, gapLength);
+        promice2 = videoIsPlaying(page, 1, gapLength);
+        promice3 = videoIsPlaying(page, 2, gapLength);
+        promice4 = videoIsPlaying(page, 3, gapLength);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeTruthy();
         expect(await promice3).toBeTruthy();
         expect(await promice4).toBeTruthy();
-
-        //Ждем 10 секунд, чтобы перебраться через архивный пробел
-        await page.waitForTimeout(10000);
 
         //Смотрим в течении 5 секунд, что видео везеде идет
         promice1 = videoIsPlaying(page, 0, 5);
@@ -1776,16 +1781,22 @@ test.describe("Common block", () => {
         //Проверяем, что записи достаточно
         await isRecordEnough(page);
 
-        let contextList = await getArchiveContext("Black", [h264Cameras[2], h264Cameras[3], h265Cameras[2], h265Cameras[3]]);
+        let contextList = await getArchiveContext("Black", [h264Cameras[2], h265Cameras[2], h264Cameras[3], h265Cameras[3]]);
         await changeArchiveContext(contextList, false, "High");
         const archiveRecordOffTime = new Date();
         await page.waitForTimeout(10000);
         await changeArchiveContext([contextList[3]], true, "High");
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
         await changeArchiveContext([contextList[2]], true, "High");
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
         await changeArchiveContext([contextList[0], contextList[1]], true, "High");
-        await createLayout([h264Cameras[2], h264Cameras[3], h265Cameras[2], h265Cameras[3]], 2, 2, "Arhive Gap 2");
+        await createLayout([h264Cameras[2], h265Cameras[2], h264Cameras[3], h265Cameras[3]], 2, 2, "Arhive Gap 2");
+        /* Примерная схема архивных пробелов, которая должна была получиться:
+        Камера 1 -------|   ~20s   |-------
+        Камера 2 -------|   ~20s   |-------
+        Камера 3 -------|  ~15s  |---------
+        Камера 4 -------| ~10s |-----------
+        */
 
         await page.goto(currentURL);
         await authorization(page, "root", "root");
@@ -1800,55 +1811,74 @@ test.describe("Common block", () => {
         //Проверяем, что в ячейках указаны верные кодеки
         await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
         await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
-        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
-        await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H264");
         await expect(page.locator('[data-testid="at-camera-title"]').nth(3)).toContainText("H265");
         //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
         await scrollLastInterval(page);
         //Выставляем время архива до пробела
-        await page.locator('[data-testid="at-camera-time"]').nth(0).click();
-        await page.locator('input[type="text"]').nth(0).fill(String(archiveRecordOffTime.getHours()));
-        await page.locator('input[type="text"]').nth(1).fill(String(archiveRecordOffTime.getMinutes()));
-        await page.locator('input[type="text"]').nth(2).fill(String(archiveRecordOffTime.getSeconds() - 3));
-        await page.keyboard.press("Enter");
+        const currentTime = new Date();
+        const firstCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[2], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+        const thirdCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[3], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+        const lastCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h265Cameras[3], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+
+        await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
 
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
-        //Ждем в течении 3 секунд, что видео нигде не останавилось
-        let promice1 = videoIsPlaying(page, 0, 3);
-        let promice2 = videoIsPlaying(page, 1, 3);
-        let promice3 = videoIsPlaying(page, 2, 3);
-        let promice4 = videoIsPlaying(page, 3, 3);
+        //Ждем в течении 5 секунд, что видео нигде не останавилось
+        let promice1 = videoIsPlaying(page, 0, 5);
+        let promice2 = videoIsPlaying(page, 1, 5);
+        let promice3 = videoIsPlaying(page, 2, 5);
+        let promice4 = videoIsPlaying(page, 3, 5);
         expect(await promice1).toBeTruthy();
         expect(await promice2).toBeTruthy();
         expect(await promice3).toBeTruthy();
         expect(await promice4).toBeTruthy();
 
-        //Ждем в течении 7 секунд, видео должно играть на последней камере
-        promice1 = videoIsPlaying(page, 0, 7);
-        promice2 = videoIsPlaying(page, 1, 7);
-        promice3 = videoIsPlaying(page, 2, 7);
-        promice4 = videoIsPlaying(page, 3, 7);
+        //Вычисляем длину пробела между последней и предпоследней камерой
+        let gapStartHours = lastCameraIntervals[1].begin.hours;
+        let gapStartMinutes = lastCameraIntervals[1].begin.minutes;
+        let gapStartSeconds = lastCameraIntervals[1].begin.seconds;
+        let gapStoptHours = thirdCameraIntervals[1].begin.hours;
+        let gapStopMinutes = thirdCameraIntervals[1].begin.minutes;
+        let gapStopSeconds = thirdCameraIntervals[1].begin.seconds;
+        let gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+
+        //Смотрим в течении времени пробела, видео должно играть на последней камере
+        promice1 = videoIsPlaying(page, 0, gapLength);
+        promice2 = videoIsPlaying(page, 1, gapLength);
+        promice3 = videoIsPlaying(page, 2, gapLength);
+        promice4 = videoIsPlaying(page, 3, gapLength);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeFalsy();
         expect(await promice3).toBeFalsy();
         expect(await promice4).toBeTruthy();
 
-        //Смотрим в течении 7 секунд, видео должно идти на последних двух камерах
-        promice1 = videoIsPlaying(page, 0, 7);
-        promice2 = videoIsPlaying(page, 1, 7);
-        promice3 = videoIsPlaying(page, 2, 7);
-        promice4 = videoIsPlaying(page, 3, 7);
+        //Вычисляем длину пробела между предпоследней и первой/второй камерами
+        gapStartHours = thirdCameraIntervals[1].begin.hours;
+        gapStartMinutes = thirdCameraIntervals[1].begin.minutes;
+        gapStartSeconds = thirdCameraIntervals[1].begin.seconds;
+        gapStoptHours = firstCameraIntervals[1].begin.hours;
+        gapStopMinutes = firstCameraIntervals[1].begin.minutes;
+        gapStopSeconds = firstCameraIntervals[1].begin.seconds;
+        gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+
+        //Смотрим в течении времени пробела, видео должно идти на последних двух камерах
+        promice1 = videoIsPlaying(page, 0, gapLength);
+        promice2 = videoIsPlaying(page, 1, gapLength);
+        promice3 = videoIsPlaying(page, 2, gapLength);
+        promice4 = videoIsPlaying(page, 3, gapLength);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeFalsy();
         expect(await promice3).toBeTruthy();
         expect(await promice4).toBeTruthy();
 
-        //Смотрим в течении 7 секунд, видео должно идти на всех камерах
-        promice1 = videoIsPlaying(page, 0, 7);
-        promice2 = videoIsPlaying(page, 1, 7);
-        promice3 = videoIsPlaying(page, 2, 7);
-        promice4 = videoIsPlaying(page, 3, 7);
+        //Смотрим в течении 5 секунд, видео должно идти на всех камерах
+        promice1 = videoIsPlaying(page, 0, 5);
+        promice2 = videoIsPlaying(page, 1, 5);
+        promice3 = videoIsPlaying(page, 2, 5);
+        promice4 = videoIsPlaying(page, 3, 5);
         expect(await promice1).toBeTruthy();
         expect(await promice2).toBeTruthy();
         expect(await promice3).toBeTruthy();
@@ -2054,12 +2084,11 @@ test.describe("Common block", () => {
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
-    test.only('Interval rewinding (CLOUD-T317)', async ({ page }) => {
+    test('Interval rewinding (CLOUD-T317)', async ({ page }) => {
         //Проверяем, что записи достаточно
-        recordGenerated = true
         await isRecordEnough(page);
 
-        let contextList = await getArchiveContext("Black", [h264Cameras[0], h265Cameras[0]]);
+        const contextList = await getArchiveContext("Black", [h264Cameras[0], h265Cameras[0]]);
         await changeArchiveContext(contextList, false, "High");
         const archiveRecordOffTime = new Date();
         await page.waitForTimeout(10000);
@@ -2075,56 +2104,64 @@ test.describe("Common block", () => {
         console.log(WS.url());
         // await page.pause();
         const currentTime = new Date();
-        let intervals = await getArchiveIntervals("Black", h264Cameras[0], timeToISO(currentTime), timeToISO(archiveRecordOffTime));
-        await transformISOtime(intervals);
+        const firstCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[0], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+        const secondCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h265Cameras[0], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+        
         //Переходим в архив
         await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
         await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
-        //Проверяем, что в ячейках указаны верные кодеки
-        // await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(4);
-        // await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
-        // await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
-        // await expect(page.locator('[data-testid="at-camera-title"]').nth(2)).toContainText("H265");
-        // await expect(page.locator('[data-testid="at-camera-title"]').nth(3)).toContainText("H265");
+        //Проверяем, что в ячейках указаны верные камеры
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
         //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
         await scrollLastInterval(page);
         //Выставляем время архива до пробела
-        await setCellTime(page, 0, archiveRecordOffTime.getHours(), archiveRecordOffTime.getMinutes(), archiveRecordOffTime.getSeconds() - 3);
-        await page.pause();
+        await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 3);
+        // await page.pause();
+
+        //Кликаем на кнопку перехода к другому фрагменту
+        await page.waitForTimeout(1000);
+        await page.locator('#at-archive-control-next-int').click();
+        //Проверяем что поинтер архива спозиционировался в начале следующего интервала
+        let currentPointerPosition = await page.locator('.control [role="none"] span').first().innerText();
+        expect(timeToSeconds(currentPointerPosition) == timeToSeconds(`${firstCameraIntervals[1].begin.hours}:${firstCameraIntervals[1].begin.minutes}:${firstCameraIntervals[1].begin.seconds}`)).toBeTruthy();
+        
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
-        //Ждем в течении 3 секунд, что видео нигде не останавилось
-        let promice1 = videoIsPlaying(page, 0, 3);
-        let promice2 = videoIsPlaying(page, 1, 3);
-        let promice3 = videoIsPlaying(page, 2, 3);
-        let promice4 = videoIsPlaying(page, 3, 3);
+        //Ждем в течении 5 секунд, что видео нигде не останавилось
+        let promice1 = videoIsPlaying(page, 0, 5);
+        let promice2 = videoIsPlaying(page, 1, 5);
         expect(await promice1).toBeTruthy();
         expect(await promice2).toBeTruthy();
-        expect(await promice3).toBeTruthy();
-        expect(await promice4).toBeTruthy();
 
-        //Ждем в течении 5 секунд, видео на первой ячейке должно было останавится
+        //Останавливаем воспроизведение
+        await page.locator('#at-archive-control-play-pause').click();
+
+        //Кликаем на кнопку перехода к предыдущему фрагменту
+        await page.locator('#at-archive-control-prev-int').click();
+        await page.waitForTimeout(1000);
+        //Проверяем, что поинтер спозиционировался в прошлом (точное время сложно угадать, так как начало первого отрезка ограничено границиами шкалы, а они часто меняются)
+        currentPointerPosition = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(`${firstCameraIntervals[0].end.hours}:${firstCameraIntervals[0].end.minutes}:${firstCameraIntervals[0].end.seconds}`, currentPointerPosition, true)
+
+        //Выбираем вторую камеру
+        await page.locator('[role="gridcell"]').nth(1).click();
+        await page.waitForTimeout(1000);
+
+        //Кликаем на кнопку перехода к cледующему фрагменту
+        await page.locator('#at-archive-control-next-int').click();
+        //Проверяем что поинтер архива спозиционировался в начале следующего интервала
+        currentPointerPosition = await page.locator('.control [role="none"] span').first().innerText();
+        expect(timeToSeconds(currentPointerPosition) == timeToSeconds(`${secondCameraIntervals[1].begin.hours}:${secondCameraIntervals[1].begin.minutes}:${secondCameraIntervals[1].begin.seconds}`)).toBeTruthy();
+        
+        //Кликаем на кнопку воспроизведения
+        await page.locator('#at-archive-control-play-pause').click();
+        //Ждем в течении 5 секунд, что видео нигде не останавилось
         promice1 = videoIsPlaying(page, 0, 5);
         promice2 = videoIsPlaying(page, 1, 5);
-        promice3 = videoIsPlaying(page, 2, 5);
-        promice4 = videoIsPlaying(page, 3, 5);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeTruthy();
-        expect(await promice3).toBeTruthy();
-        expect(await promice4).toBeTruthy();
-
-        //Ждем 10 секунд, чтобы перебраться через архивный пробел
-        await page.waitForTimeout(10000);
-
-        //Смотрим в течении 5 секунд, что видео везеде идет
-        promice1 = videoIsPlaying(page, 0, 5);
-        promice2 = videoIsPlaying(page, 1, 5);
-        promice3 = videoIsPlaying(page, 2, 5);
-        promice4 = videoIsPlaying(page, 3, 5);
-        expect(await promice1).toBeTruthy();
-        expect(await promice2).toBeTruthy();
-        expect(await promice3).toBeTruthy();
-        expect(await promice4).toBeTruthy();
 
         //Останваливаем воспроизведение
         await page.locator('#at-archive-control-play-pause').click();
@@ -2209,6 +2246,7 @@ async function videoIsPlaying(page:Page, cellNumber: number, playSeconds: number
     const timer = page.locator('.VideoCell').nth(cellNumber).locator('[data-testid="at-camera-time"]');
     let previousTime = 0;
     let videoStoped = 0;
+    console.log("Check video is playing during " + playSeconds + " seconds:");
     for (let i = 0; i < playSeconds; i++) {
         await page.waitForTimeout(1000);
 
@@ -2231,7 +2269,22 @@ async function videoIsPlaying(page:Page, cellNumber: number, playSeconds: number
 }
 
 async function setCellTime(page: Page, cellNumber: number, hours: number | string, minutes: number | string, seconds: number | string) {
-
+    if (Number(seconds) < 0) {
+        seconds = Number(seconds) + 60;
+        minutes = Number(minutes) - 1;
+    }
+    if (Number(seconds) > 59) {
+        seconds = Number(seconds) - 60;
+        minutes = Number(minutes) + 1;
+    }
+    if (Number(minutes) < 0) {
+        seconds = Number(minutes) + 60;
+        minutes = Number(hours) - 1;
+    }
+    if (Number(minutes) > 59) {
+        seconds = Number(minutes) + 60;
+        minutes = Number(hours) + 1;
+    }
     await page.locator('[data-testid="at-camera-time"]').nth(cellNumber).click();
     await page.locator('input[type="text"]').nth(0).fill(String(hours));
     await page.locator('input[type="text"]').nth(1).fill(String(minutes));
@@ -2241,6 +2294,59 @@ async function setCellTime(page: Page, cellNumber: number, hours: number | strin
 
 function timeToISO(date: Date) {
     let time = date.toISOString(); //"2023-01-01T00:00:00.000Z"
-    console.log(time.replaceAll("-", "").replace(":", "").replace(/[Zz]/, ""));
-    return time.replace("-", "").replace(":", "").replace(/[Zz]/, "");
+    return time.replace("-", "").replace("-", "").replace(":", "").replace(":", "").replace(/[Zz]/, ""); //Знаю что выглядит супер говняно, но было лень обновлять либу ts чтобы работал replaceAll
+}
+
+function transformISOtime(intervals: { begin: string, end: string }[]) {
+    let trasformedArray = Array();
+    const currentTime = new Date();
+    const timeOffset = currentTime.getTimezoneOffset() / 60;
+    for (let interval of intervals) {
+        let beginHoursWithOffset = Number(interval.begin.slice(9, 11)) - timeOffset;
+        let beginDay = Number(interval.begin.slice(6, 8))
+        if (beginHoursWithOffset >= 24) {
+            beginHoursWithOffset = beginHoursWithOffset - 24;
+            beginDay++
+        }
+        if (beginHoursWithOffset < 0) {
+            beginHoursWithOffset = beginHoursWithOffset + 24;
+            beginDay--
+        }
+
+        let endHoursWithOffset = Number(interval.end.slice(9, 11)) - timeOffset;
+        let endDay = Number(interval.end.slice(6, 8))
+        if (endHoursWithOffset >= 24) {
+            endHoursWithOffset = endHoursWithOffset - 24;
+            endDay++
+        }
+        if (endHoursWithOffset < 0) {
+            endHoursWithOffset = endHoursWithOffset + 24;
+            endDay--
+        }
+
+        trasformedArray.push(
+            { //"20230628T075236.756000"
+                begin: {
+                    year: Number(interval.begin.slice(0, 4)),
+                    month: Number(interval.begin.slice(4, 6)),
+                    day: beginDay,
+                    hours: beginHoursWithOffset,
+                    minutes: Number(interval.begin.slice(11, 13)),
+                    seconds: Number(interval.begin.slice(13, 15)),
+                    milliseconds: Number(interval.begin.slice(16, 19)),
+                },
+                end: {
+                    year: Number(interval.end.slice(0, 4)),
+                    month: Number(interval.end.slice(4, 6)),
+                    day: endDay,
+                    hours: endHoursWithOffset,
+                    minutes: Number(interval.end.slice(11, 13)),
+                    seconds: Number(interval.end.slice(13, 15)),
+                    milliseconds: Number(interval.end.slice(16, 19)),
+                }
+            }
+        )
+    }
+    console.log(trasformedArray);
+    return trasformedArray;
 }
