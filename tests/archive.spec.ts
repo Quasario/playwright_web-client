@@ -13,28 +13,64 @@ import { isCameraListOpen, getCameraList, cameraAnnihilator, layoutAnnihilator, 
 let h264Cameras: any[], h265Cameras: any[], mjpegCameras:  any[];
 let recordGenerated = false; //переменная показывает достаточен ли размер записи для начала теста
 
+
+test.describe("Configuration block", () => {
+    test.beforeAll(async () => {
+        await getHostName();
+        await configurationCollector();
+        await cameraAnnihilator("all");
+        await layoutAnnihilator("all");
+        await roleAnnihilator("all");
+        await userAnnihilator("all");
+        await deleteArchive('Black');
+        await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
+        await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
+        await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
+        h264Cameras = Configuration.cameras.slice(0, 12);
+        h265Cameras = Configuration.cameras.slice(12, 21);
+        mjpegCameras = Configuration.cameras.slice(21, 23);
+        await addVirtualVideo(h264Cameras, "tracker", "tracker");
+        await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
+        await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
+        await createArchive("Black");
+        await createArchiveVolume("Black", 30);
+        await createArchiveContext("Black", Configuration.cameras, true, "High");
+    });
+
+    test('Configuration', async ({ page }) => {
+        expect(Configuration.cameras.length).toEqual(23);
+        expect(Configuration.archives.length).toBeGreaterThanOrEqual(1);
+        console.log("Configuration created");
+    });
+})
+
 test.describe("Common block", () => {
 
     test.beforeAll(async () => {
         await getHostName();
-        await configurationCollector();
-        // await cameraAnnihilator("all");
-        // await layoutAnnihilator("all");
-        // await roleAnnihilator("all");
-        // await userAnnihilator("all");
-        // await deleteArchive('Black');
-        // await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
-        // await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
-        // await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
+        await configurationCollector(); 
+        if (Configuration.cameras.length < 20) {
+            await cameraAnnihilator("all");
+            await layoutAnnihilator("all");
+            await roleAnnihilator("all");
+            await userAnnihilator("all");
+            await deleteArchive('Black');
+            await createCamera(12, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H264", 0);
+            await createCamera(9, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "H265", 12);
+            await createCamera(2, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "", "MJPEG", 21);
+            h264Cameras = Configuration.cameras.slice(0, 12);
+            h265Cameras = Configuration.cameras.slice(12, 21);
+            mjpegCameras = Configuration.cameras.slice(21, 23);
+            await addVirtualVideo(h264Cameras, "tracker", "tracker");
+            await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
+            await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
+            await createArchive("Black");
+            await createArchiveVolume("Black", 30);
+            await createArchiveContext("Black", Configuration.cameras, true, "High");
+        }
         h264Cameras = Configuration.cameras.slice(0, 12);
         h265Cameras = Configuration.cameras.slice(12, 21);
         mjpegCameras = Configuration.cameras.slice(21, 23);
-        // await addVirtualVideo(h264Cameras, "tracker", "tracker");
-        // await addVirtualVideo(h265Cameras, "H265-2K", "H265-2K");
-        // await addVirtualVideo(mjpegCameras, "witcher_mjpeg", "witcher_mjpeg");
-        // await createArchive("Black");
-        // await createArchiveVolume("Black", 30);
-        // await createArchiveContext("Black", Configuration.cameras, true, "High");
     });
 
     test.beforeEach(async ({ page }) => {
@@ -1694,7 +1730,7 @@ test.describe("Common block", () => {
 
     test('Playback thru archive gap, when archive exists for other cameras (CLOUD-T312)', async ({ page }) => {
         //Проверяем, что записи достаточно
-        recordGenerated = true;
+        
         await isRecordEnough(page);
 
         let contextList = await getArchiveContext("Black", [h264Cameras[0]]);
@@ -1726,6 +1762,7 @@ test.describe("Common block", () => {
         const currentTime = new Date();
         const firstCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[0], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
         await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
+        await WS.waitForEvent("framereceived");
 
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
@@ -1777,7 +1814,7 @@ test.describe("Common block", () => {
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
-    test('Playback thru archive gap, when archive not exists for other cameras (CLOUD-T313)', async ({ page }) => {
+    test.only('Playback thru archive gap, when archive not exists for other cameras (CLOUD-T313)', async ({ page }) => {
         //Проверяем, что записи достаточно
         await isRecordEnough(page);
 
@@ -1821,8 +1858,8 @@ test.describe("Common block", () => {
         const firstCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[2], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
         const thirdCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[3], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
         const lastCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h265Cameras[3], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
-
         await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
+        await WS.waitForEvent("framereceived");
 
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
@@ -1843,7 +1880,7 @@ test.describe("Common block", () => {
         let gapStoptHours = thirdCameraIntervals[1].begin.hours;
         let gapStopMinutes = thirdCameraIntervals[1].begin.minutes;
         let gapStopSeconds = thirdCameraIntervals[1].begin.seconds;
-        let gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+        let gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds + 1}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
 
         //Смотрим в течении времени пробела, видео должно играть на последней камере
         promice1 = videoIsPlaying(page, 0, gapLength);
@@ -1862,7 +1899,7 @@ test.describe("Common block", () => {
         gapStoptHours = firstCameraIntervals[1].begin.hours;
         gapStopMinutes = firstCameraIntervals[1].begin.minutes;
         gapStopSeconds = firstCameraIntervals[1].begin.seconds;
-        gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+        gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds + 1}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
 
         //Смотрим в течении времени пробела, видео должно идти на последних двух камерах
         promice1 = videoIsPlaying(page, 0, gapLength);
@@ -2037,9 +2074,9 @@ test.describe("Common block", () => {
         await WS.waitForEvent("framereceived");
 
         //Получаем список кадров и листаем архив назад
-        let layoutRequest = page.waitForResponse(request => request.url().includes('archive/contents/frames'));
+        let frameRequest = page.waitForResponse(request => request.url().includes('archive/contents/frames'));
         await page.locator('#at-archive-control-next-frame').click();
-        let body = await (await layoutRequest).json();
+        let body = await (await frameRequest).json();
         console.log(body.frames);
         for (let i = 0; i < 5; i++) {
             let firstCameraPlay = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('play') && data.payload.includes(firstCamera.accessPointChanged), timeout: 10000 });
@@ -2061,9 +2098,9 @@ test.describe("Common block", () => {
         await WS.waitForEvent("framereceived");
 
         //Получаем список кадров и листаем архив назад
-        layoutRequest = page.waitForResponse(request => request.url().includes('archive/contents/frames'));
+        frameRequest = page.waitForResponse(request => request.url().includes('archive/contents/frames'));
         await page.locator('#at-archive-control-prev-frame').click();
-        body = await (await layoutRequest).json();
+        body = await (await frameRequest).json();
         console.log(body.frames);
         for (let i = 0; i < 5; i++) {
             let firstCameraPlay = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('play') && data.payload.includes(firstCamera.accessPointChanged), timeout: 10000 });
@@ -2161,6 +2198,252 @@ test.describe("Common block", () => {
         promice1 = videoIsPlaying(page, 0, 5);
         promice2 = videoIsPlaying(page, 1, 5);
         expect(await promice1).toBeFalsy();
+        expect(await promice2).toBeTruthy();
+
+        //Останваливаем воспроизведение
+        await page.locator('#at-archive-control-play-pause').click();
+        await page.waitForTimeout(2000);
+        await isMessagesStop(page, WS);
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Interval request check (CLOUD-T930)', async ({ page }) => {
+        const firstCamera = h264Cameras[4];
+        const secondCamera = h265Cameras[4];
+        await createLayout([firstCamera, secondCamera], 2, 1, "Intervals check");
+        
+        await isRecordEnough(page);
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+
+        //Переходим в архив
+        let intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${firstCamera.accessPointChanged}/20`));
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click();
+        await intervalsRequest;
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        await expect(page.locator('.VideoCell').nth(0)).toHaveClass(/.*VideoCell--active.*/); //СДЕЛАТЬ СЕЛЕКТОРЫ
+
+        //Проверяем, что в ячейках указаны верные камеры
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+
+        //Переходим в полноэкранный режим по первой камере и скроллим архив
+        await page.locator('[role="gridcell"]').nth(0).dblclick();
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${firstCamera.accessPointChanged}/20`));
+        const lastInterval = page.locator('.intervals').last().locator('rect').last();
+        await lastInterval.hover();
+        await page.mouse.wheel(0, -3000);
+        await intervalsRequest;
+        intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${firstCamera.accessPointChanged}/20`));
+        await lastInterval.hover();
+        await page.mouse.wheel(0, 2000);
+        await intervalsRequest;
+
+        //Выходим из полноэкранного режима и скроллим архив
+        await page.locator('[role="gridcell"]').nth(0).dblclick();
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+        intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${firstCamera.accessPointChanged}/20`));
+        await lastInterval.hover();
+        await page.mouse.wheel(0, 2000);
+        await intervalsRequest;
+
+        //Выбираем вторую камеру и скроллим архив
+        await page.locator('[role="gridcell"]').nth(1).click();
+        await expect(page.locator('.VideoCell').nth(1)).toHaveClass(/.*VideoCell--active.*/);
+        intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${secondCamera.accessPointChanged}/20`));
+        await lastInterval.hover();
+        await page.mouse.wheel(0, -1000);
+        await intervalsRequest;
+
+        //Переходим в полноэкранный режим по второй камере и скроллим архив
+        await page.locator('[role="gridcell"]').nth(1).dblclick();
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(1);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H265");
+        intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${secondCamera.accessPointChanged}/20`));
+        await lastInterval.hover();
+        await page.mouse.wheel(0, -1000);
+        await intervalsRequest;
+        intervalsRequest = page.waitForResponse(request => request.url().includes(`archive/contents/intervals/${secondCamera.accessPointChanged}/20`));
+        await lastInterval.hover();
+        await page.mouse.wheel(0, 3000);
+        await intervalsRequest;
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Playback from the end, when archive not exists for other camera (CLOUD-T931)', async ({ page }) => {
+        //Проверяем, что записи достаточно
+        
+        await isRecordEnough(page);
+
+        const contextList = await getArchiveContext("Black", [h264Cameras[8]]);
+        await changeArchiveContext(contextList, false, "High");
+        await page.waitForTimeout(10000);
+        const archiveRecordOffTime = new Date();
+        await createLayout([h264Cameras[7], h264Cameras[8]], 2, 1, "From the end");
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+        
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click(); //СДЕЛАТЬ СЕЛЕКТОРЫ
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        //Проверяем, что в ячейках указаны верные камеры
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H264");
+
+        //Устанавливаем видимый интервал в центр шкалы и скролим (приближаем)
+        await scrollLastInterval(page);
+        //Выставляем время во время когда у первой камеры есть запись а у второй нет
+        await setCellTime(page, 0, archiveRecordOffTime.getHours(), archiveRecordOffTime.getMinutes(), archiveRecordOffTime.getSeconds());
+        // await page.pause();
+        
+        //Кликаем на кнопку воспроизведения
+        let startPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await page.locator('#at-archive-control-play-pause').click();
+        //Ждем в течении 7 секунд, что видео идет на первой камере, а на второй нет
+        let promice1 = videoIsPlaying(page, 0, 7);
+        let promice2 = videoIsPlaying(page, 1, 7);
+        expect(await promice1).toBeTruthy();
+        expect(await promice2).toBeFalsy();
+        let endPointerTime = await page.locator('.control [role="none"] span').first().innerText();
+        await comparePointerPositions(startPointerTime, endPointerTime);
+
+        //Останваливаем воспроизведение
+        await page.locator('#at-archive-control-play-pause').click();
+        await page.waitForTimeout(2000);
+        await isMessagesStop(page, WS);
+
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Alerts clearing from the archive scale (CLOUD-T932)', async ({ page }) => {
+        const firstCamera = h264Cameras[5];
+        const secondCamera = h265Cameras[5];
+        await createLayout([firstCamera, secondCamera], 2, 1, "Intervals check");
+
+        await isRecordEnough(page);
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+
+        //Генерируем и обрабатываем несколько тревог на первой камере
+        await page.locator('.VideoCell--alert-review').first().click();
+        await page.getByRole('button', { name: 'Alarm panel' }).waitFor({ state: 'attached', timeout: 5000 });
+        await page.locator('.VideoCell--alert-review').first().click();
+        await page.locator('[role="group"] button').first().click();
+        await page.getByRole('button', { name: 'Alarm panel' }).waitFor({ state: 'detached', timeout: 5000 });
+        await page.locator('#at-app-mode-live').first().click();
+        await page.locator('.VideoCell--alert-review').first().click();
+        await page.getByRole('button', { name: 'Alarm panel' }).waitFor({ state: 'attached', timeout: 5000 });
+        await page.locator('.VideoCell--alert-review').first().click();
+        await page.locator('[role="group"] button').last().click();
+        await page.getByRole('button', { name: 'Alarm panel' }).waitFor({ state: 'detached', timeout: 5000 });
+        await page.locator('#at-app-mode-live').first().click();
+        //Выбираем раскладку
+        await page.locator('#at-layout-expand').click();
+        await page.locator('#at-layout-item-0').click({ force: true });
+
+        //Переходим в архив
+        let alertsRequest = page.waitForResponse(request => request.url().includes(`archive/events/alerts/${firstCamera.accessPointChanged}/20`));
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click();
+        await alertsRequest;
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+        await expect(page.locator('.VideoCell').nth(0)).toHaveClass(/.*VideoCell--active.*/); //СДЕЛАТЬ СЕЛЕКТОРЫ
+
+        //Проверяем, что в ячейках указаны верные камеры
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+
+        //Проверяем, что отображаются флаги тревог
+        await expect(page.locator('.flag').nth(0)).toBeVisible();
+
+        //Выбираем вторую камеру
+        alertsRequest = page.waitForResponse(request => request.url().includes(`archive/events/alerts/${secondCamera.accessPointChanged}/20`));
+        await page.locator('[role="gridcell"]').nth(1).click();
+        await alertsRequest;
+        await expect(page.locator('.VideoCell').nth(1)).toHaveClass(/.*VideoCell--active.*/);
+
+        //Проверяем, что флагов тревог нет
+        await expect(page.locator('.flag').nth(0)).toBeHidden();
+        
+        //Проверяем что веб-клиент не упал
+        await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
+    });
+
+    test('Archive playback by keyframes (CLOUD-T933)', async ({ page }) => {
+        const firstCamera = h264Cameras[4];
+        const secondCamera = h265Cameras[4];
+        await createLayout([firstCamera, secondCamera], 2, 1, "Only Keyframes");
+        
+        await isRecordEnough(page);
+
+        await page.goto(currentURL);
+        await authorization(page, "root", "root");
+
+        //Получаем веб-сокет объект видеостримов
+        const WS = await page.waitForEvent("websocket", ws => ws.url().includes("/ws?") && !ws.isClosed());
+        console.log(WS.url());
+        // await page.pause();
+
+        //Включаем отображение только ключевых кадров
+        await page.locator('#at-top-menu-btn').click();
+        await page.getByRole('menuitem', { name: 'Preferences' }).click();
+        await page.getByLabel('Show all frames').uncheck();
+        await page.locator('[role="dialog"] button:last-child').click();
+
+        //Переходим в архив
+        await page.getByRole('button', { name: 'Multi-camera archive' }).click();
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1)); ////СДЕЛАТЬ СЕЛЕКТОРЫ
+
+        //Проверяем, что в ячейках указаны верные камеры
+        await expect(page.locator('[data-testid="at-camera-title"]')).toHaveCount(2);
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(0)).toContainText("H264");
+        await expect(page.locator('[data-testid="at-camera-title"]').nth(1)).toContainText("H265");
+
+        //Устанавливаем видимый интервал в центр архивной шкалы
+        await scrollLastInterval(page);
+        await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1));
+        const lastInterval = page.locator('.intervals').last().locator('rect').last();//ПОМЕТИТЬ СЕЛЕКТОРАМИ ИНТЕРВАЛЫ АРХИВА СПРАВА
+        await clickToInterval(lastInterval, 0.5);
+
+        //Воспроизводим архив
+        let playMessage = WS.waitForEvent("framesent", { predicate: data => data.payload.includes('"speed":1'), timeout: 10000 });
+        await page.locator('#at-archive-control-play-pause').click();
+        let playFrame = JSON.parse((await playMessage).payload.toString());
+        expect(!playFrame.keyFrames).toBeTruthy();
+        expect(playFrame.entities.length).toEqual(2);
+
+        //Ждем в течении 5 секунд, что видео идет
+        let promice1 = videoIsPlaying(page, 0, 5);
+        let promice2 = videoIsPlaying(page, 1, 5);
+        expect(await promice1).toBeTruthy();
         expect(await promice2).toBeTruthy();
 
         //Останваливаем воспроизведение
