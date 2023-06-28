@@ -49,7 +49,7 @@ export async function closeCameraList(page: Page) {
 
 export async function getCameraList() {
     let cameras = await getCamerasEndpoints();
-    let newArr: { [key: string]: any, 'videochannelID': string, 'cameraBinding': string,  "isIpServer": boolean }[] = [];
+    let newArr: { [key: string]: any, 'videochannelID': string, 'cameraBinding': string, 'accessPointChanged': string,  "isIpServer": boolean }[] = [];
     for (let camera of cameras) {
         let cameraVideochannel = camera.accessPoint.replace("SourceEndpoint.video:", "VideoChannel.").replace(/:\w*/, "");
         let cameraBinding = camera.accessPoint.replace(/\/SourceEndpoint.video:.*/, "");

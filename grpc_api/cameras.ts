@@ -251,6 +251,44 @@ export async function changeSingleCameraName(cameraEndpoint: string, newName: st
     await configurationCollector("cameras");
 };
 
+export async function changeMicrophoneStatus(camerasEndpoint: { [key: string]: any, "cameraBinding": string }, bool = false) {
+
+    const microphoneEndpoint = `${camerasEndpoint.cameraBinding}/Microphone.0`;
+    let body = {
+        "method": "axxonsoft.bl.config.ConfigurationService.ChangeConfig",
+        "data": {
+            "changed": [
+                {
+                    "uid": microphoneEndpoint,
+                    "type": "Microphone",
+                    "properties": [
+                        {
+                            "id": "enabled",
+                            "value_bool": bool
+                        }
+                    ],
+                    "opaque_params": []
+                }
+            ]
+        }
+    };
+
+    let request = await fetch(`${currentURL}/grpc`, {
+        headers: {
+            "Authorization": "Basic cm9vdDpyb290",
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    });
+    
+    let response = await request.json();
+
+    if (request.ok && !response.failed.length) {
+        console.log(`Microphone "${microphoneEndpoint}" was ${bool ? "enabled" : "disabled"}.`.green);
+    } else console.log(`Error: Camera "${microphoneEndpoint}" coudn't change status. Code: ${request.status}, Failed: ${response.failed}`.red);
+
+    await configurationCollector("cameras");
+};
 
 export async function changeIPServerCameraActiveStatus(videoChannelEndpoint: string, bool: boolean) {
 
