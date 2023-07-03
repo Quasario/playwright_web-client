@@ -1786,10 +1786,10 @@ test.describe("Common block", () => {
         const gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
 
         //Ждем в течении длины пробела, видео на первой ячейке должно было останавится
-        promice1 = videoIsPlaying(page, 0, gapLength);
-        promice2 = videoIsPlaying(page, 1, gapLength);
-        promice3 = videoIsPlaying(page, 2, gapLength);
-        promice4 = videoIsPlaying(page, 3, gapLength);
+        promice1 = videoIsPlaying(page, 0, gapLength + 1);
+        promice2 = videoIsPlaying(page, 1, gapLength + 1);
+        promice3 = videoIsPlaying(page, 2, gapLength + 1);
+        promice4 = videoIsPlaying(page, 3, gapLength + 1);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeTruthy();
         expect(await promice3).toBeTruthy();
@@ -1814,7 +1814,7 @@ test.describe("Common block", () => {
         await expect(page.locator("body")).not.toHaveClass(/.*error.*/);
     });
 
-    test.only('Playback thru archive gap, when archive not exists for other cameras (CLOUD-T313)', async ({ page }) => {
+    test('Playback thru archive gap, when archive not exists for other cameras (CLOUD-T313)', async ({ page }) => {
         //Проверяем, что записи достаточно
         await isRecordEnough(page);
 
@@ -1880,13 +1880,13 @@ test.describe("Common block", () => {
         let gapStoptHours = thirdCameraIntervals[1].begin.hours;
         let gapStopMinutes = thirdCameraIntervals[1].begin.minutes;
         let gapStopSeconds = thirdCameraIntervals[1].begin.seconds;
-        let gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds + 1}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+        let gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
 
         //Смотрим в течении времени пробела, видео должно играть на последней камере
-        promice1 = videoIsPlaying(page, 0, gapLength);
-        promice2 = videoIsPlaying(page, 1, gapLength);
-        promice3 = videoIsPlaying(page, 2, gapLength);
-        promice4 = videoIsPlaying(page, 3, gapLength);
+        promice1 = videoIsPlaying(page, 0, gapLength + 1);
+        promice2 = videoIsPlaying(page, 1, gapLength + 1);
+        promice3 = videoIsPlaying(page, 2, gapLength + 1);
+        promice4 = videoIsPlaying(page, 3, gapLength + 1);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeFalsy();
         expect(await promice3).toBeFalsy();
@@ -1899,13 +1899,13 @@ test.describe("Common block", () => {
         gapStoptHours = firstCameraIntervals[1].begin.hours;
         gapStopMinutes = firstCameraIntervals[1].begin.minutes;
         gapStopSeconds = firstCameraIntervals[1].begin.seconds;
-        gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds + 1}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
+        gapLength = timeToSeconds(`${gapStoptHours}:${gapStopMinutes}:${gapStopSeconds}`) - timeToSeconds(`${gapStartHours}:${gapStartMinutes}:${gapStartSeconds}`);
 
         //Смотрим в течении времени пробела, видео должно идти на последних двух камерах
-        promice1 = videoIsPlaying(page, 0, gapLength);
-        promice2 = videoIsPlaying(page, 1, gapLength);
-        promice3 = videoIsPlaying(page, 2, gapLength);
-        promice4 = videoIsPlaying(page, 3, gapLength);
+        promice1 = videoIsPlaying(page, 0, gapLength + 1);
+        promice2 = videoIsPlaying(page, 1, gapLength + 1);
+        promice3 = videoIsPlaying(page, 2, gapLength + 1);
+        promice4 = videoIsPlaying(page, 3, gapLength + 1);
         expect(await promice1).toBeFalsy();
         expect(await promice2).toBeFalsy();
         expect(await promice3).toBeTruthy();
