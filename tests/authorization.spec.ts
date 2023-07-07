@@ -62,7 +62,7 @@ test.afterAll(async () => {
     await roleAnnihilator("all");
     await userAnnihilator("all");
     await cameraAnnihilator("all");
-    exchangeIndexCredentials("", "");
+    if (isLocalMachine) exchangeIndexCredentials("", "");
 });
 
 test('Authorization attempt with an empty fields (CLOUD-T153)', async ({ page }) => {

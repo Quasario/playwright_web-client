@@ -16,25 +16,25 @@ test.describe("Common block", () => {
     test.beforeAll(async () => {
         await getHostName();
         await configurationCollector();
-        // await cameraAnnihilator("all");
-        // await layoutAnnihilator("all");
-        // await roleAnnihilator("all");
-        // await userAnnihilator("all");
-        // await deleteArchive('Black');
-        // await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera", 0);
-        // await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
-        // await createLayout([Configuration.cameras[1], Configuration.cameras[2]], 2, 1, "Test Layout");
-        // await createArchive("Black");
-        // await createArchiveVolume("Black", 20);
-        // await createArchiveContext("Black", [Configuration.cameras[0]], true, "High");
-        // await createArchiveContext("Black", [Configuration.cameras[1]], false, "High");
-        // await createArchiveContext("Black", [Configuration.cameras[2]], true, "Low");
-        // await createArchiveContext("Black", [Configuration.cameras[3]], false, "Low");
-        // await createRole("Alert_test");
-        // await setRolePermissions("Alert_test");
-        // await createUser("alert");
-        // await assignUserRole("Alert_test", "alert");
-        // await setUserPassword("alert", "alert");
+        await cameraAnnihilator("all");
+        await layoutAnnihilator("all");
+        await roleAnnihilator("all");
+        await userAnnihilator("all");
+        await deleteArchive('Black');
+        await createCamera(4, "AxxonSoft", "Virtual several streams", "admin123", "admin", "0.0.0.0", "80", "1", "Camera", 0);
+        await addVirtualVideo(Configuration.cameras, "lprusa", "tracker");
+        await createLayout([Configuration.cameras[1], Configuration.cameras[2]], 2, 1, "Test Layout");
+        await createArchive("Black");
+        await createArchiveVolume("Black", 20);
+        await createArchiveContext("Black", [Configuration.cameras[0]], true, "High");
+        await createArchiveContext("Black", [Configuration.cameras[1]], false, "High");
+        await createArchiveContext("Black", [Configuration.cameras[2]], true, "Low");
+        await createArchiveContext("Black", [Configuration.cameras[3]], false, "Low");
+        await createRole("Alert_test");
+        await setRolePermissions("Alert_test");
+        await createUser("alert");
+        await assignUserRole("Alert_test", "alert");
+        await setUserPassword("alert", "alert");
     });
     
     test.beforeEach(async ({ page }) => {

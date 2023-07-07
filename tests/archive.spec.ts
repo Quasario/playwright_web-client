@@ -77,7 +77,6 @@ test.describe("Common block", () => {
         await layoutAnnihilator("all");
     });
     
-    
     test('X1 layout h264 playback (CLOUD-T300)', async ({ page }) => {
         await createLayout(h264Cameras, 1, 1, "X1-H264");
         //Проверяем, что записи достаточно
@@ -1685,6 +1684,7 @@ test.describe("Common block", () => {
         await expect(page.locator('.VideoCell__debug').nth(2)).toContainText("H264");
 
         //Кликаем на кнопку воспроизведения
+        await page.waitForTimeout(2000);
         await page.locator('#at-archive-control-play-pause').click();
         await expect(page.locator('.VideoCell--playing video')).toHaveCount(3);
         //Играем видео 3 секунды
@@ -1761,8 +1761,9 @@ test.describe("Common block", () => {
         //Выставляем время архива до пробела
         const currentTime = new Date();
         const firstCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[0], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
+        let frameRecieved = WS.waitForEvent("framereceived");
         await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
-        await WS.waitForEvent("framereceived");
+        await frameRecieved;
 
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
@@ -1859,7 +1860,9 @@ test.describe("Common block", () => {
         const thirdCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h264Cameras[3], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
         const lastCameraIntervals = transformISOtime(await getArchiveIntervals("Black", h265Cameras[3], timeToISO(currentTime), timeToISO(archiveRecordOffTime)));
         await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
-        await WS.waitForEvent("framereceived");
+        let frameRecieved = WS.waitForEvent("framereceived");
+        await setCellTime(page, 0, firstCameraIntervals[0].end.hours, firstCameraIntervals[0].end.minutes, firstCameraIntervals[0].end.seconds - 5);
+        await frameRecieved;
 
         //Кликаем на кнопку воспроизведения
         await page.locator('#at-archive-control-play-pause').click();
@@ -2070,9 +2073,10 @@ test.describe("Common block", () => {
         //Кликаем на центр последнего записанного интервала
         await waitAnimationEnds(page, page.getByRole('tabpanel').nth(1));
         const lastInterval = page.locator('.intervals').last().locator('rect').last();//ПОМЕТИТЬ СЕЛЕКТОРАМИ ИНТЕРВАЛЫ АРХИВА СПРАВА
+        let frameRecieved = WS.waitForEvent("framereceived");
         await clickToInterval(lastInterval, 0.5);
-        await WS.waitForEvent("framereceived");
-
+        await frameRecieved;
+        
         //Получаем список кадров и листаем архив назад
         let frameRequest = page.waitForResponse(request => request.url().includes('archive/contents/frames'));
         await page.locator('#at-archive-control-next-frame').click();
@@ -2094,8 +2098,9 @@ test.describe("Common block", () => {
         }
 
         //Перемещаем поинтер 
+        frameRecieved = WS.waitForEvent("framereceived");
         await clickToInterval(lastInterval, 0.7);
-        await WS.waitForEvent("framereceived");
+        await frameRecieved;
 
         //Получаем список кадров и листаем архив назад
         frameRequest = page.waitForResponse(request => request.url().includes('archive/contents/frames'));
