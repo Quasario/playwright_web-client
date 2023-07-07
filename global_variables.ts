@@ -1,7 +1,7 @@
 import { getHostName } from "./http_api/http_host";
 import { green, blue, yellow, red } from 'colors'
 
-export const currentURL = "http://192.168.0.17"; //"http://127.0.0.1"
+export const currentURL = "http://192.168.0.18"; //"http://127.0.0.1"
 export const isLocalMachine = false; //если тесты и сервер находятся на одной машине - true
 export const videoFolder = 'C:/demovideo';
 export const archiveDirection = 'C:/';
