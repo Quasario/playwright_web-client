@@ -36,6 +36,10 @@ export default defineConfig({
     // launchOptions: {
     //   slowMo: 500,
     // },
+    video: {
+      mode: 'retain-on-failure',
+      size: { width: 1280, height: 720 },
+    },
     locale: "en",
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
